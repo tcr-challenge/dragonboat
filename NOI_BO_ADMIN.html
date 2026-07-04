@@ -49,6 +49,26 @@
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
 
+  <!-- ===== LỚP KHOÁ MẬT KHẨU NHẸ (che toàn bộ trang cho tới khi nhập đúng mật khẩu) =====
+       Đây là lớp bảo vệ NHẸ ở phía trình duyệt (không phải bảo mật máy chủ thực sự), phù hợp để
+       chặn người xem qua đường (không rành kỹ thuật) không vô tình thấy số điện thoại đầy đủ.
+       Mật khẩu hiện tại: 88888888 (8 số 8) — anh có thể đổi ở dòng "const SITE_PASSWORD" trong thẻ script bên dưới. -->
+  <div id="password-gate" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: #7f1d1d;">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs text-center">
+      <div class="w-14 h-14 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-lock text-2xl"></i>
+      </div>
+      <h3 class="font-bold text-gray-800 mb-1">Nhập mật khẩu để xem</h3>
+      <p class="text-xs text-gray-400 mb-4">Trang chứa số điện thoại đầy đủ của thành viên</p>
+      <input id="password-input" type="password" inputmode="numeric" maxlength="8" placeholder="Nhập mật khẩu"
+        class="w-full text-center tracking-[0.3em] text-lg font-semibold px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-2">
+      <p id="password-error" class="hidden text-xs text-red-500 mb-2">Sai mật khẩu, vui lòng thử lại!</p>
+      <button onclick="checkSitePassword()" class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-xl transition-colors">
+        Xác nhận
+      </button>
+    </div>
+  </div>
+
   <!-- 1. BANNER -->
   <header class="bg-gradient-header text-white shadow-lg relative overflow-hidden no-print">
     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -201,6 +221,56 @@
   </footer>
 
   <script>
+    // ===== KIỂM TRA MẬT KHẨU NHẸ =====
+    // Đổi mật khẩu ở đây nếu anh muốn (mặc định: 88888888 - 8 số 8)
+    const SITE_PASSWORD = '88888888';
+    const SESSION_UNLOCK_KEY = 'clb_fullphone_unlocked';
+
+    function unlockGate() {
+      document.getElementById('password-gate').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function checkSitePassword() {
+      const input = document.getElementById('password-input');
+      const errorEl = document.getElementById('password-error');
+      if (input.value.trim() === SITE_PASSWORD) {
+        try { sessionStorage.setItem(SESSION_UNLOCK_KEY, '1'); } catch (e) {}
+        errorEl.classList.add('hidden');
+        unlockGate();
+      } else {
+        errorEl.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    // Đã nhập đúng mật khẩu trong phiên làm việc này rồi thì không hỏi lại
+    (function initGate() {
+      let alreadyUnlocked = false;
+      try { alreadyUnlocked = sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1'; } catch (e) {}
+      if (alreadyUnlocked) {
+        document.addEventListener('DOMContentLoaded', unlockGate);
+      } else {
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('DOMContentLoaded', () => {
+          const input = document.getElementById('password-input');
+          if (input) {
+            input.focus();
+            input.addEventListener('keyup', (e) => { if (e.key === 'Enter') checkSitePassword(); });
+          }
+        });
+      }
+    })();
+
+    // Khi in / xuất PDF, luôn cần đã mở khoá trước (để tránh in được nội dung mà chưa nhập mật khẩu)
+    window.addEventListener('beforeprint', () => {
+      let alreadyUnlocked = false;
+      try { alreadyUnlocked = sessionStorage.getItem(SESSION_UNLOCK_KEY) === '1'; } catch (e) {}
+      if (!alreadyUnlocked) {
+        document.getElementById('password-gate').style.display = 'flex';
+      }
+    });
     // Link API Google Apps Script của anh đã lưu cố định
     const API_URL = "https://script.google.com/macros/s/AKfycbyleJAk0ILYaxNAYmEBAr7qVNgHovmSXjsIbewYLeYhxcVVoMy2QJ0__3xizrxwUvCnIQ/exec";
 
