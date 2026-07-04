@@ -12,7 +12,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
     .bg-gradient-header {
-      background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+      background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.png') center/cover no-repeat;
       /* 🖼️ CHỖ THAY ẢNH BANNER (2/2): muốn dùng hẳn 1 tấm ẢNH làm nền banner đỏ thay vì màu gradient,
          xoá dòng "background: linear-gradient(...)" phía trên và thêm dòng dưới đây (bỏ dấu / * * / để kích hoạt):
          background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
@@ -34,13 +34,13 @@
         <i class="fa-solid fa-ship text-3xl md:text-4xl text-amber-400"></i>
       </div>
       <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
-        CLB Thuyền Rồng
+        CÂU LẠC BỘ THUYỀN RỒNG
       </h1>
       <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
-        Đình Thượng Cát
+        ĐÌNH THƯỢNG CÁT
       </h2>
       <p class="text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
-        <i class="fa-solid fa-users mr-1.5"></i> Danh Sách Thành Viên Đăng Ký Trực Tuyến
+        <i class="fa-solid fa-users mr-1.5"></i> Danh Sách Thành Viên Đăng Ký
       </p>
     </div>
   </header>
@@ -70,26 +70,23 @@
           type="text" 
           id="search-input" 
           oninput="filterMembers()"
-          placeholder="Tìm kiếm theo họ tên hoặc số điện thoại đăng ký..." 
+          placeholder="Nhập TÊN hoặc SỐ ĐIỆN THOẠI" 
           class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all shadow-inner placeholder:text-gray-400"
         >
       </div>
-      <p class="text-[11px] text-gray-400 mt-2 ml-1">
-        <i class="fa-solid fa-info-circle mr-1"></i> Mẹo: Nhập đầy đủ 10 số điện thoại gốc vẫn tìm chính xác được thành viên dù hệ thống đã ẩn bớt số.
-      </p>
     </div>
 
     <!-- 3. BA TAB CHỨC NĂNG -->
     <div class="border-b border-gray-200 mb-6">
       <nav class="flex space-x-2" aria-label="Tabs">
         <button class="border-b-2 border-red-600 py-3 px-4 text-sm font-semibold text-red-600 flex items-center gap-2">
-          <i class="fa-solid fa-id-card"></i> Danh sách gốc
+          <i class="fa-solid fa-id-card"></i> Danh sách
         </button>
         <button onclick="alert('Tính năng đang được phát triển và sẽ cập nhật sau')" class="border-b-2 border-transparent py-3 px-4 text-sm font-medium text-gray-400 hover:text-gray-600 hover:border-gray-300 flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-clock-rotate-left"></i> Chức năng 2 (Sẽ cập nhật)
+          <i class="fa-solid fa-clock-rotate-left"></i> Updating...
         </button>
         <button onclick="alert('Tính năng đang được phát triển và sẽ cập nhật sau')" class="border-b-2 border-transparent py-3 px-4 text-sm font-medium text-gray-400 hover:text-gray-600 hover:border-gray-300 flex items-center gap-2 transition-all">
-          <i class="fa-solid fa-gear"></i> Chức năng 3 (Sẽ cập nhật)
+          <i class="fa-solid fa-gear"></i> Updating...
         </button>
       </nav>
     </div>
@@ -124,7 +121,7 @@
       <div id="cards-header" class="hidden max-md:flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white text-[11px] font-bold uppercase tracking-wider" style="display: none;">
         <span class="w-4.5 shrink-0 text-center"><i class="fa-solid fa-list-ol"></i></span>
         <span class="flex-1"><i class="fa-solid fa-user mr-1"></i> Họ và tên</span>
-        <span class="shrink-0"><i class="fa-solid fa-phone mr-1"></i> Số điện thoại</span>
+        <span class="shrink-0">Số điện thoại</span>
       </div>
       <div id="cards-container" class="hidden max-md:block divide-y divide-gray-100" style="display: none;">
         <!-- Dữ liệu tự động đổ vào -->
@@ -154,8 +151,8 @@
         <div class="space-y-2 text-xs">
           <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
           <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
-          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo: </span></p>
-          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: fb/thuongcatdragonboat</span></p>
         </div>
       </div>
       <div class="pt-4 text-center text-xs text-gray-500">
