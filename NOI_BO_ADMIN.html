@@ -1,0 +1,419 @@
+<!--
+  ⚠️ GHI CHÚ QUAN TRỌNG:
+  Đây là BẢN NỘI BỘ hiển thị SỐ ĐIỆN THOẠI ĐẦY ĐỦ (không ẩn số) + có nút In/Xuất PDF,
+  dùng để anh in danh sách hoặc lưu PDF cho Ban chủ nhiệm/quản lý CLB.
+  KHÔNG NÊN đăng công khai file này trên GitHub Pages công cộng (ai cũng xem được),
+  vì sẽ lộ số điện thoại của tất cả thành viên. Chỉ nên:
+  - Mở trực tiếp file này trên máy tính/điện thoại của anh (không cần internet để mở file), hoặc
+  - Đưa lên một trang web có đặt mật khẩu / chỉ chia sẻ nội bộ Ban chủ nhiệm.
+-->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>CLB Thuyền Rồng - Đình Thượng Cát (Bản đầy đủ SĐT - In/PDF)</title>
+  <!-- Tailwind CSS để tạo giao diện nhanh, đẹp, chuẩn di động -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- FontAwesome để chèn icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .bg-gradient-header {
+      background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.png') center/cover no-repeat;
+      /* 🖼️ CHỖ THAY ẢNH BANNER (2/2): muốn dùng hẳn 1 tấm ẢNH làm nền banner đỏ thay vì màu gradient,
+         xoá dòng "background: linear-gradient(...)" phía trên và thêm dòng dưới đây (bỏ dấu / * * / để kích hoạt):
+         background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
+      */
+    }
+
+    /* ===== CHẾ ĐỘ IN / XUẤT PDF =====
+       Khi bấm nút "In / Xuất PDF", trình duyệt sẽ mở hộp thoại in.
+       CSS bên dưới đảm bảo bản in luôn hiển thị dạng BẢNG đầy đủ (kể cả khi đang xem trên điện thoại),
+       ẩn bớt các phần không cần thiết (ô tìm kiếm, tab, nút bấm, footer liên hệ...) để bản in/PDF gọn, đẹp. */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      #table-container-desktop { display: block !important; overflow: visible !important; }
+      #cards-header, #cards-container { display: none !important; }
+      main { max-width: 100% !important; padding: 0 !important; }
+      table { font-size: 11px; width: 100%; }
+      th, td { padding: 6px 10px !important; }
+      .rounded-2xl, .shadow-sm, .shadow-lg { box-shadow: none !important; border-radius: 0 !important; }
+    }
+    .print-only { display: none; }
+    @media print { .print-only { display: block !important; } }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- 1. BANNER -->
+  <header class="bg-gradient-header text-white shadow-lg relative overflow-hidden no-print">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="container mx-auto px-4 py-8 md:py-12 text-center relative z-10">
+      <!-- 🖼️ CHỖ THAY ẢNH BANNER/LOGO CLB (1/2):
+           A) Đổi LOGO tròn: xoá thẻ <i class="fa-solid fa-ship..."></i> bên dưới,
+              thay bằng: <img src="ĐƯỜNG_DẪN_ẢNH_LOGO_CỦA_ANH.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover">
+           B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
+      <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
+        <i class="fa-solid fa-ship text-3xl md:text-4xl text-amber-400"></i>
+      </div>
+      <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
+        CÂU LẠC BỘ THUYỀN RỒNG
+      </h1>
+      <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
+        ĐÌNH THƯỢNG CÁT
+      </h2>
+      <p class="text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
+        <i class="fa-solid fa-users mr-1.5"></i> Danh Sách Thành Viên Đăng Ký
+      </p>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container mx-auto px-4 py-6 flex-grow max-w-5xl">
+
+    <!-- Tiêu đề chỉ hiện ra khi IN / xuất PDF (thay cho banner ảnh, vì ảnh nền in không đẹp) -->
+    <div class="print-only text-center mb-4">
+      <h1 class="text-xl font-extrabold uppercase">Câu Lạc Bộ Thuyền Rồng - Đình Thượng Cát</h1>
+      <p class="text-sm font-medium">Danh sách thành viên đăng ký</p>
+      <p class="text-[11px] text-gray-500" id="print-date"></p>
+    </div>
+
+    <!-- 4. TỔNG SỐ THÀNH VIÊN + NÚT IN / XUẤT PDF -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 flex items-center justify-between gap-3.5 flex-wrap no-print">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+          <i class="fa-solid fa-users text-xl"></i>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Tổng cộng:</span>
+          <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
+          <span class="text-sm font-medium text-gray-500">thành viên</span>
+        </div>
+      </div>
+      <button onclick="window.print()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
+        <i class="fa-solid fa-file-pdf"></i> In / Xuất PDF
+      </button>
+    </div>
+
+    <!-- 2. MỤC TÌM KIẾM -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 no-print">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input 
+          type="text" 
+          id="search-input" 
+          oninput="filterMembers()"
+          placeholder="Nhập TÊN hoặc SỐ ĐIỆN THOẠI" 
+          class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all shadow-inner placeholder:text-gray-400"
+        >
+      </div>
+    </div>
+
+    <!-- 3. BA TAB CHỨC NĂNG -->
+    <div class="border-b border-gray-200 mb-6 no-print">
+      <nav class="flex space-x-2" aria-label="Tabs">
+        <button class="border-b-2 border-red-600 py-3 px-4 text-sm font-semibold text-red-600 flex items-center gap-2">
+          <i class="fa-solid fa-id-card"></i> Danh sách
+        </button>
+        <button onclick="alert('Tính năng đang được phát triển và sẽ cập nhật sau')" class="border-b-2 border-transparent py-3 px-4 text-sm font-medium text-gray-400 hover:text-gray-600 hover:border-gray-300 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-clock-rotate-left"></i> Updating...
+        </button>
+        <button onclick="alert('Tính năng đang được phát triển và sẽ cập nhật sau')" class="border-b-2 border-transparent py-3 px-4 text-sm font-medium text-gray-400 hover:text-gray-600 hover:border-gray-300 flex items-center gap-2 transition-all">
+          <i class="fa-solid fa-gear"></i> Updating...
+        </button>
+      </nav>
+    </div>
+
+    <!-- 5. DANH SÁCH THÀNH VIÊN ĐÃ ĐĂNG KÝ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- Trạng thái Loading ban đầu -->
+      <div id="loading" class="py-12 text-center text-gray-400 flex flex-col items-center justify-center gap-3">
+        <div class="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-sm font-medium">Đang kết nối đồng bộ dữ liệu Sheet...</p>
+      </div>
+
+      <!-- Bảng hiển thị Desktop -->
+      <div id="table-container-desktop" class="hidden md:block overflow-x-auto" style="display: none;">
+        <table class="w-full text-left border-collapse" id="members-table">
+          <thead>
+            <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+              <th class="py-4 px-6 w-16 text-center border-r border-red-600/30"><i class="fa-solid fa-list-ol mr-1"></i> STT</th>
+              <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-user mr-1"></i> Họ và tên</th>
+              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-cake-candles mr-1"></i> Năm sinh</th>
+              <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-house-chimney mr-1"></i> Tổ dân phố</th>
+              <th class="py-4 px-6 text-right"><i class="fa-solid fa-phone mr-1"></i> Số điện thoại</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700">
+            <!-- Dữ liệu tự động đổ vào -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Danh sách dạng Thẻ Mobile -->
+      <div id="cards-header" class="hidden max-md:flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white text-[11px] font-bold uppercase tracking-wider" style="display: none;">
+        <span class="w-4.5 shrink-0 text-center"><i class="fa-solid fa-list-ol"></i></span>
+        <span class="flex-1"><i class="fa-solid fa-user mr-1"></i> Họ và tên</span>
+        <span class="shrink-0">Số điện thoại</span>
+      </div>
+      <div id="cards-container" class="hidden max-md:block divide-y divide-gray-100" style="display: none;">
+        <!-- Dữ liệu tự động đổ vào -->
+      </div>
+
+      <!-- Thông báo khi không có kết quả -->
+      <div id="no-result" class="hidden py-12 text-center text-gray-400">
+        <i class="fa-solid fa-folder-open text-3xl mb-2 text-gray-300"></i>
+        <p class="text-sm">Không tìm thấy thành viên nào khớp với từ khóa tìm kiếm!</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 5. FOOTER -->
+  <footer class="bg-gray-900 text-gray-300 text-sm mt-12 border-t border-gray-800 no-print">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-800 pb-6 text-left">
+        <div>
+          <h4 class="text-white font-bold uppercase text-base tracking-wide mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-ship text-amber-400"></i> CLB Thuyền Rồng Đình Thượng Cát
+          </h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Chào mừng các thành viên tham gia tập luyện và phát triển phong trào thể thao truyền thống bơi thuyền rồng tại quê hương Thượng Cát.
+          </p>
+        </div>
+        <div class="space-y-2 text-xs">
+          <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: fb/thuongcatdragonboat</span></p>
+        </div>
+      </div>
+      <div class="pt-4 text-center text-xs text-gray-500">
+        <p>&copy; 2026 Copyright by LangBenSong. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Link API Google Apps Script của anh đã lưu cố định
+    const API_URL = "https://script.google.com/macros/s/AKfycbyleJAk0ILYaxNAYmEBAr7qVNgHovmSXjsIbewYLeYhxcVVoMy2QJ0__3xizrxwUvCnIQ/exec";
+
+    let allMembers = [];
+
+    // Nhận diện thiết bị di động thực sự để hiển thị giao diện tối giản hơn.
+    // Kết hợp nhiều tín hiệu (User Agent + khả năng cảm ứng + con trỏ "thô" + kích thước màn hình)
+    // vì chỉ dựa vào User Agent đôi khi không đủ tin cậy (một số trình duyệt/app trong app
+    // như Facebook, Zalo... có thể gửi User Agent không chuẩn).
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      const uaMatch = /android|iphone|ipad|ipod|windows phone|blackberry|iemobile|opera mini|mobile|silk/i.test(ua);
+
+      const hasTouch = (navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
+      const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const noHover = window.matchMedia && window.matchMedia('(hover: none)').matches;
+      const smallScreen = Math.min(window.innerWidth, window.innerHeight) <= 820;
+
+      // Chỉ cần 1 trong 2 điều kiện đúng là coi như thiết bị di động:
+      // (1) User Agent nhận diện được là điện thoại/máy bảng
+      // (2) Thiết bị có cảm ứng thật sự (không phải chuột) + màn hình nhỏ
+      return uaMatch || (hasTouch && (coarsePointer || noHover) && smallScreen);
+    }
+    let isMobile = isMobileDevice();
+
+    // Nếu người dùng xoay màn hình hoặc thay đổi kích thước cửa sổ, cập nhật lại và vẽ lại danh sách
+    window.addEventListener('resize', () => {
+      const nowMobile = isMobileDevice();
+      if (nowMobile !== isMobile) {
+        isMobile = nowMobile;
+        if (allMembers.length) sortAndRender(allMembers);
+      }
+    });
+
+    // Danh sách mã màu nền dịu mắt cho từng TDP khác nhau
+    const bgColorsTable = [
+      'bg-white hover:bg-gray-50/80',
+      'bg-blue-50/60 hover:bg-blue-100/60',
+      'bg-amber-50/60 hover:bg-amber-100/60',
+      'bg-emerald-50/60 hover:bg-emerald-100/60',
+      'bg-purple-50/60 hover:bg-purple-100/60',
+      'bg-orange-50/60 hover:bg-orange-100/60',
+      'bg-teal-50/60 hover:bg-teal-100/60',
+      'bg-rose-50/60 hover:bg-rose-100/60'
+    ];
+
+    // ----- TĂNG TỐC HIỂN THỊ DỮ LIỆU (cache tạm ở trình duyệt) -----
+    // Ý tưởng: lần đầu tải xong sẽ lưu tạm dữ liệu vào localStorage. Những lần vào lại sau,
+    // trang hiển thị NGAY dữ liệu cũ đã lưu (không cần chờ mạng) rồi mới âm thầm gọi Sheet
+    // ở phía sau để lấy bản mới nhất và cập nhật lại nếu có gì thay đổi. Nhờ vậy cảm giác
+    // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
+    const CACHE_KEY = 'clb_members_cache_v1';
+
+    function showMembers(list) {
+      allMembers = list;
+      document.getElementById('total-count').innerText = allMembers.length;
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('table-container-desktop').style.display = '';
+      document.getElementById('cards-header').style.display = '';
+      document.getElementById('cards-container').style.display = '';
+      sortAndRender(allMembers);
+    }
+
+    function fetchFreshData() {
+      return fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          showMembers(data);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const printDateEl = document.getElementById('print-date');
+      if (printDateEl) printDateEl.innerText = 'Ngày xuất: ' + new Date().toLocaleString('vi-VN');
+
+      let hasCache = false;
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          showMembers(JSON.parse(cached));
+          hasCache = true;
+        }
+      } catch (e) {}
+
+      // Luôn gọi lấy dữ liệu mới nhất từ Sheet (dù đã có cache hay chưa) để đảm bảo chính xác
+      fetchFreshData().catch(err => {
+        console.error(err);
+        if (!hasCache) {
+          document.getElementById('loading').innerHTML = `
+            <div class="text-red-500 px-4">
+              <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+              <p class="text-sm font-semibold">Lỗi kết nối API Google Sheets. Vui lòng kiểm tra lại link hoặc cấu quyền Anyone!</p>
+            </div>
+          `;
+        }
+      });
+    });
+
+    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
+    function sortAndRender(list) {
+      const sortedList = [...list].sort((a, b) => {
+        const tdpA = a.toDanPho || '';
+        const tdpB = b.toDanPho || '';
+        return tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+      });
+      renderData(sortedList);
+    }
+
+    function renderData(list) {
+      const tbody = document.getElementById('table-body');
+      const cardsContainer = document.getElementById('cards-container');
+      const noResult = document.getElementById('no-result');
+
+      tbody.innerHTML = '';
+      cardsContainer.innerHTML = '';
+
+      if (list.length === 0) {
+        noResult.classList.remove('hidden');
+        return;
+      }
+      noResult.classList.add('hidden');
+
+      // Tạo bản đồ ánh xạ để gán màu cố định cho từng TDP xuất hiện trong danh sách
+      const tdpColorMap = {};
+      let colorIndex = 0;
+
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        if (!(key in tdpColorMap)) {
+          tdpColorMap[key] = bgColorsTable[colorIndex % bgColorsTable.length];
+          colorIndex++;
+        }
+      });
+
+      list.forEach((item, index) => {
+        const currentTdpKey = item.toDanPho || 'Trống';
+        const assignedBgStyle = tdpColorMap[currentTdpKey];
+
+        // 1. Giao diện bảng Desktop
+        const tr = document.createElement('tr');
+        tr.className = `${assignedBgStyle} transition-colors`;
+        tr.innerHTML = `
+          <td class="py-4 px-6 text-center text-gray-400 font-normal border-r border-gray-100/50">${index + 1}</td>
+          <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${item.hoTen}</td>
+          <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
+          <td class="py-4 px-6 text-gray-700 font-medium border-r border-gray-100/50">${item.toDanPho || '---'}</td>
+          <td class="py-4 px-6 text-right font-mono text-gray-600 tracking-wider">${item.rawPhone}</td>
+        `;
+        tbody.appendChild(tr);
+
+        // 2. Giao diện dạng thẻ Mobile
+        const card = document.createElement('div');
+
+        if (isMobile) {
+          // Chế độ TỐI GIẢN dành riêng cho thiết bị di động thật (điện thoại):
+          // hiển thị STT, Họ tên, Năm sinh + Tổ dân phố (dòng nhỏ dưới tên) và SĐT
+          card.className = `px-3 py-2.5 ${assignedBgStyle} border-b border-gray-100 transition-all flex justify-between items-center gap-2`;
+          card.innerHTML = `
+            <div class="flex items-start gap-2 min-w-0">
+              <span class="mt-0.5 text-[10px] bg-black/5 text-gray-500 w-4.5 h-4.5 rounded-full inline-flex items-center justify-center font-normal shrink-0">${index + 1}</span>
+              <div class="min-w-0">
+                <h4 class="font-semibold text-gray-900 text-sm truncate">${item.hoTen}</h4>
+                <p class="text-[11px] text-gray-500 truncate">
+                  <span>${item.namSinh || '---'}</span>
+                  <span class="mx-1 text-gray-300">|</span>
+                  <span>${item.toDanPho || '---'}</span>
+                </p>
+              </div>
+            </div>
+            <span class="shrink-0 text-xs font-mono font-semibold text-gray-700 bg-white/80 border border-black/5 px-2 py-1 rounded-md tracking-wider">${item.rawPhone}</span>
+          `;
+        } else {
+          // Chế độ ĐẦY ĐỦ: dùng cho tablet/máy tính đang thu hẹp cửa sổ trình duyệt
+          card.className = `p-4 ${assignedBgStyle} border-b border-gray-100 transition-all flex justify-between items-center`;
+          card.innerHTML = `
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs bg-black/5 text-gray-500 w-5 h-5 rounded-full inline-flex items-center justify-center font-normal">${index + 1}</span>
+                <h4 class="font-bold text-gray-900 text-base">${item.hoTen}</h4>
+              </div>
+              <p class="text-xs text-gray-600 pl-7">
+                <span>Năm sinh: <strong>${item.namSinh || '---'}</strong></span>
+                <span class="mx-1.5 text-gray-300">|</span>
+                <span class="font-semibold text-gray-700">${item.toDanPho || '---'}</span>
+              </p>
+            </div>
+            <div class="text-right">
+              <span class="block text-sm font-mono font-semibold text-gray-700 bg-white/80 border border-black/5 px-2 py-1 rounded-md tracking-wider shadow-xs">${item.rawPhone}</span>
+            </div>
+          `;
+        }
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    function filterMembers() {
+      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+      const removeSign = (str) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "d");
+      };
+      const cleanKeyword = removeSign(keyword);
+
+      const filtered = allMembers.filter(item => {
+        const matchName = removeSign(item.hoTen.toLowerCase()).includes(cleanKeyword);
+        const matchPhone = item.rawPhone.includes(keyword); 
+        return matchName || matchPhone;
+      });
+
+      // Lọc xong vẫn gọi hàm gom nhóm sắp xếp theo TDP
+      sortAndRender(filtered);
+    }
+
+  </script>
+</body>
+</html>
