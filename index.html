@@ -121,6 +121,11 @@
       </div>
 
       <!-- Danh sách dạng Thẻ Mobile -->
+      <div id="cards-header" class="hidden max-md:flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white text-[11px] font-bold uppercase tracking-wider" style="display: none;">
+        <span class="w-4.5 shrink-0 text-center"><i class="fa-solid fa-list-ol"></i></span>
+        <span class="flex-1"><i class="fa-solid fa-user mr-1"></i> Họ và tên</span>
+        <span class="shrink-0"><i class="fa-solid fa-phone mr-1"></i> Số điện thoại</span>
+      </div>
       <div id="cards-container" class="hidden max-md:block divide-y divide-gray-100" style="display: none;">
         <!-- Dữ liệu tự động đổ vào -->
       </div>
@@ -218,6 +223,7 @@
       document.getElementById('total-count').innerText = allMembers.length;
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('table-container-desktop').style.display = '';
+      document.getElementById('cards-header').style.display = '';
       document.getElementById('cards-container').style.display = '';
       sortAndRender(allMembers);
     }
