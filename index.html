@@ -13,6 +13,10 @@
     body { font-family: 'Inter', sans-serif; }
     .bg-gradient-header {
       background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+      /* 🖼️ CHỖ THAY ẢNH BANNER (2/2): muốn dùng hẳn 1 tấm ẢNH làm nền banner đỏ thay vì màu gradient,
+         xoá dòng "background: linear-gradient(...)" phía trên và thêm dòng dưới đây (bỏ dấu / * * / để kích hoạt):
+         background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
+      */
     }
   </style>
 </head>
@@ -22,6 +26,10 @@
   <header class="bg-gradient-header text-white shadow-lg relative overflow-hidden">
     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
     <div class="container mx-auto px-4 py-8 md:py-12 text-center relative z-10">
+      <!-- 🖼️ CHỖ THAY ẢNH BANNER/LOGO CLB (1/2):
+           A) Đổi LOGO tròn: xoá thẻ <i class="fa-solid fa-ship..."></i> bên dưới,
+              thay bằng: <img src="ĐƯỜNG_DẪN_ẢNH_LOGO_CỦA_ANH.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover">
+           B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
       <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
         <i class="fa-solid fa-ship text-3xl md:text-4xl text-amber-400"></i>
       </div>
@@ -31,7 +39,7 @@
       <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
         Đình Thượng Cát
       </h2>
-      <p class="text-xs md:text-sm text-red-100 mt-3 font-medium tracking-normal max-w-md mx-auto bg-black/10 py-1.5 px-4 rounded-full">
+      <p class="text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
         <i class="fa-solid fa-users mr-1.5"></i> Danh Sách Thành Viên Đăng Ký Trực Tuyến
       </p>
     </div>
@@ -40,35 +48,15 @@
   <!-- MAIN CONTAINER -->
   <main class="container mx-auto px-4 py-6 flex-grow max-w-5xl">
 
-    <!-- 4. THỐNG KÊ SỐ LƯỢNG THỜI GIAN THỰC -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 flex-wrap">
-      <div class="flex items-center gap-3.5">
-        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
-          <i class="fa-solid fa-chart-simple text-xl"></i>
-        </div>
-        <div>
-          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Thống kê đăng ký</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Dữ liệu cập nhật thời gian thực</p>
-        </div>
+    <!-- 4. TỔNG SỐ THÀNH VIÊN (đã bỏ phần thống kê truy cập/đang xem theo yêu cầu) -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+        <i class="fa-solid fa-users text-xl"></i>
       </div>
-      <div class="flex flex-wrap items-center justify-end gap-3">
-        <div class="bg-red-50 text-red-700 px-5 py-2.5 rounded-xl border border-red-100/50 flex items-baseline gap-2">
-          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Tổng cộng:</span>
-          <span id="total-count" class="text-2xl font-black tracking-tight">...</span>
-          <span class="text-sm font-medium">thành viên</span>
-        </div>
-        <div class="bg-emerald-50 text-emerald-700 px-5 py-2.5 rounded-xl border border-emerald-100/50 flex items-center gap-2" title="Số người đang xem trang trong ~1 phút gần đây">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span class="text-xs font-bold uppercase tracking-wider text-emerald-600/80">Đang xem:</span>
-          <span id="online-now" class="text-2xl font-black tracking-tight">--</span>
-        </div>
-        <div class="bg-blue-50 text-blue-700 px-5 py-2.5 rounded-xl border border-blue-100/50 flex items-baseline gap-2">
-          <span class="text-xs font-bold uppercase tracking-wider text-blue-600/80">Lượt truy cập:</span>
-          <span id="total-visits" class="text-2xl font-black tracking-tight">--</span>
-        </div>
+      <div class="flex items-baseline gap-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Tổng cộng:</span>
+        <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
+        <span class="text-sm font-medium text-gray-500">thành viên</span>
       </div>
     </div>
 
@@ -123,8 +111,7 @@
               <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-user mr-1"></i> Họ và tên</th>
               <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-cake-candles mr-1"></i> Năm sinh</th>
               <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-house-chimney mr-1"></i> Tổ dân phố</th>
-              <th class="py-4 px-6 text-right border-r border-red-600/30"><i class="fa-solid fa-phone mr-1"></i> Số điện thoại</th>
-              <th class="py-4 px-6 w-20 text-center"><i class="fa-solid fa-heart mr-1"></i> Yêu thích</th>
+              <th class="py-4 px-6 text-right"><i class="fa-solid fa-phone mr-1"></i> Số điện thoại</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700">
@@ -207,22 +194,6 @@
       }
     });
 
-    // ----- CHỨC NĂNG THẢ TIM YÊU THÍCH -----
-    // Ghi nhớ những thành viên mà TRÌNH DUYỆT NÀY đã thả tim (để icon hiển thị đúng trạng thái đã thích)
-    let likedSet = new Set(JSON.parse(localStorage.getItem('clb_liked_members') || '[]'));
-
-    // ----- CHỨC NĂNG THỐNG KÊ NGƯỜI TRUY CẬP THỜI GIAN THỰC -----
-    // Mỗi trình duyệt/tab được cấp 1 mã phiên (session id) riêng để server đếm "đang online"
-    const SESSION_ID = (() => {
-      let sid = sessionStorage.getItem('clb_sid');
-      if (!sid) {
-        sid = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('sid-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-        sessionStorage.setItem('clb_sid', sid);
-      }
-      return sid;
-    })();
-    const STATS_POLL_INTERVAL = 25000; // 25 giây gửi lại 1 lần để giữ trạng thái "đang online" và cập nhật số liệu
-
     // Danh sách mã màu nền dịu mắt cho từng TDP khác nhau
     const bgColorsTable = [
       'bg-white hover:bg-gray-50/80',
@@ -235,65 +206,54 @@
       'bg-rose-50/60 hover:bg-rose-100/60'
     ];
 
-    window.addEventListener('DOMContentLoaded', () => {
-      fetch(API_URL)
+    // ----- TĂNG TỐC HIỂN THỊ DỮ LIỆU (cache tạm ở trình duyệt) -----
+    // Ý tưởng: lần đầu tải xong sẽ lưu tạm dữ liệu vào localStorage. Những lần vào lại sau,
+    // trang hiển thị NGAY dữ liệu cũ đã lưu (không cần chờ mạng) rồi mới âm thầm gọi Sheet
+    // ở phía sau để lấy bản mới nhất và cập nhật lại nếu có gì thay đổi. Nhờ vậy cảm giác
+    // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
+    const CACHE_KEY = 'clb_members_cache_v1';
+
+    function showMembers(list) {
+      allMembers = list;
+      document.getElementById('total-count').innerText = allMembers.length;
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('table-container-desktop').style.display = '';
+      document.getElementById('cards-container').style.display = '';
+      sortAndRender(allMembers);
+    }
+
+    function fetchFreshData() {
+      return fetch(API_URL)
         .then(response => response.json())
         .then(data => {
-          allMembers = data;
-          document.getElementById('total-count').innerText = allMembers.length;
-          document.getElementById('loading').classList.add('hidden');
-          
-          // Chỉ hiển thị đúng khung chứa theo từng thiết bị (Sử dụng CSS block thay vì ép cứng display ở JS)
-          document.getElementById('table-container-desktop').style.display = '';
-          document.getElementById('cards-container').style.display = '';
-          
-          // Thực hiện sắp xếp theo TDP trước khi hiển thị ban đầu
-          sortAndRender(allMembers);
-        })
-        .catch(err => {
-          console.error(err);
+          showMembers(data);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      let hasCache = false;
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          showMembers(JSON.parse(cached));
+          hasCache = true;
+        }
+      } catch (e) {}
+
+      // Luôn gọi lấy dữ liệu mới nhất từ Sheet (dù đã có cache hay chưa) để đảm bảo chính xác
+      fetchFreshData().catch(err => {
+        console.error(err);
+        if (!hasCache) {
           document.getElementById('loading').innerHTML = `
             <div class="text-red-500 px-4">
               <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
               <p class="text-sm font-semibold">Lỗi kết nối API Google Sheets. Vui lòng kiểm tra lại link hoặc cấu quyền Anyone!</p>
             </div>
           `;
-        });
-
-      // Ghi nhận lượt truy cập ngay khi vào trang, sau đó cứ vài giây gửi lại để
-      // server biết mình vẫn đang "online" và để lấy số liệu mới nhất
-      registerVisit();
-      setInterval(registerVisit, STATS_POLL_INTERVAL);
+        }
+      });
     });
-
-    // Gửi tín hiệu truy cập/giữ kết nối lên Google Apps Script và cập nhật số liệu hiển thị
-    function registerVisit() {
-      const alreadyVisitedInSession = sessionStorage.getItem('clb_visited');
-      const action = alreadyVisitedInSession ? 'heartbeat' : 'visit';
-
-      fetch(`${API_URL}?action=${action}&sid=${encodeURIComponent(SESSION_ID)}`)
-        .then(res => res.json())
-        .then(data => {
-          sessionStorage.setItem('clb_visited', '1');
-          updateStatsUI(data);
-        })
-        .catch(err => {
-          // Nếu Google Apps Script chưa được cập nhật để xử lý action=visit/heartbeat,
-          // ô thống kê sẽ tạm hiển thị "--" thay vì làm lỗi cả trang
-          console.warn('Chưa lấy được số liệu truy cập thời gian thực (cần cập nhật Apps Script):', err);
-        });
-    }
-
-    // Cập nhật 2 ô "Đang xem" và "Lượt truy cập" trên giao diện
-    function updateStatsUI(data) {
-      if (!data) return;
-      if (typeof data.onlineNow === 'number') {
-        document.getElementById('online-now').innerText = data.onlineNow.toLocaleString('vi-VN');
-      }
-      if (typeof data.totalVisits === 'number') {
-        document.getElementById('total-visits').innerText = data.totalVisits.toLocaleString('vi-VN');
-      }
-    }
 
     // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
     function sortAndRender(list) {
@@ -343,13 +303,7 @@
           <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${item.hoTen}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
           <td class="py-4 px-6 text-gray-700 font-medium border-r border-gray-100/50">${item.toDanPho || '---'}</td>
-          <td class="py-4 px-6 text-right font-mono text-gray-600 tracking-wider border-r border-gray-100/50">${item.maskedPhone}</td>
-          <td class="py-4 px-6 text-center">
-            <button onclick="toggleLike('${item.rawPhone}', this)" data-phone="${item.rawPhone}" class="like-btn inline-flex flex-col items-center gap-0.5 ${likedSet.has(item.rawPhone) ? 'text-red-500' : 'text-gray-300 hover:text-red-400'} transition-colors">
-              <i class="${likedSet.has(item.rawPhone) ? 'fa-solid' : 'fa-regular'} fa-heart text-lg like-icon"></i>
-              <span class="text-[10px] font-semibold like-count">${item.likeCount || 0}</span>
-            </button>
-          </td>
+          <td class="py-4 px-6 text-right font-mono text-gray-600 tracking-wider">${item.maskedPhone}</td>
         `;
         tbody.appendChild(tr);
 
@@ -366,10 +320,6 @@
               <h4 class="font-semibold text-gray-900 text-sm truncate">${item.hoTen}</h4>
             </div>
             <span class="shrink-0 text-xs font-mono font-semibold text-gray-700 bg-white/80 border border-black/5 px-2 py-1 rounded-md tracking-wider">${item.maskedPhone}</span>
-            <button onclick="toggleLike('${item.rawPhone}', this)" data-phone="${item.rawPhone}" class="like-btn shrink-0 flex items-center gap-1 ${likedSet.has(item.rawPhone) ? 'text-red-500' : 'text-gray-300'} transition-colors">
-              <i class="${likedSet.has(item.rawPhone) ? 'fa-solid' : 'fa-regular'} fa-heart text-sm like-icon"></i>
-              <span class="text-[10px] font-semibold like-count">${item.likeCount || 0}</span>
-            </button>
           `;
         } else {
           // Chế độ ĐẦY ĐỦ: dùng cho tablet/máy tính đang thu hẹp cửa sổ trình duyệt
@@ -386,12 +336,8 @@
                 <span class="font-semibold text-gray-700">${item.toDanPho || '---'}</span>
               </p>
             </div>
-            <div class="text-right space-y-1.5">
+            <div class="text-right">
               <span class="block text-sm font-mono font-semibold text-gray-700 bg-white/80 border border-black/5 px-2 py-1 rounded-md tracking-wider shadow-xs">${item.maskedPhone}</span>
-              <button onclick="toggleLike('${item.rawPhone}', this)" data-phone="${item.rawPhone}" class="like-btn inline-flex items-center gap-1 ${likedSet.has(item.rawPhone) ? 'text-red-500' : 'text-gray-300 hover:text-red-400'} transition-colors">
-                <i class="${likedSet.has(item.rawPhone) ? 'fa-solid' : 'fa-regular'} fa-heart text-sm like-icon"></i>
-                <span class="text-[10px] font-semibold like-count">${item.likeCount || 0}</span>
-              </button>
             </div>
           `;
         }
@@ -416,58 +362,6 @@
       sortAndRender(filtered);
     }
 
-    // Xử lý khi bấm nút thả tim / bỏ tim cho 1 thành viên (dùng rawPhone làm khoá định danh duy nhất)
-    function toggleLike(phone, btn) {
-      const wasLiked = likedSet.has(phone);
-      const op = wasLiked ? 'unlike' : 'like';
-
-      // Cập nhật giao diện ngay lập tức (optimistic update) để cảm giác mượt, không phải chờ mạng
-      if (wasLiked) {
-        likedSet.delete(phone);
-      } else {
-        likedSet.add(phone);
-      }
-      localStorage.setItem('clb_liked_members', JSON.stringify([...likedSet]));
-      updateLikeButtonsUI(phone, !wasLiked, wasLiked ? -1 : 1);
-
-      // Đồng bộ lượt thích lên Google Apps Script để mọi người truy cập đều thấy cùng 1 số liệu
-      fetch(`${API_URL}?action=like&phone=${encodeURIComponent(phone)}&op=${op}`)
-        .then(res => res.json())
-        .then(data => {
-          if (typeof data.likeCount === 'number') {
-            document.querySelectorAll(`.like-btn[data-phone="${CSS.escape(phone)}"] .like-count`).forEach(el => {
-              el.innerText = data.likeCount;
-            });
-          }
-        })
-        .catch(err => {
-          // Nếu Apps Script chưa hỗ trợ action=like, lượt tim vẫn được ghi nhớ tạm trên trình duyệt này
-          console.warn('Chưa đồng bộ được lượt thích lên máy chủ (cần cập nhật Apps Script):', err);
-        });
-    }
-
-    // Cập nhật icon trái tim (đặc/rỗng) và số đếm hiển thị trên tất cả bản sao của nút (bảng + thẻ mobile)
-    function updateLikeButtonsUI(phone, liked, delta) {
-      document.querySelectorAll(`.like-btn[data-phone="${CSS.escape(phone)}"]`).forEach(btn => {
-        const icon = btn.querySelector('.like-icon');
-        const countEl = btn.querySelector('.like-count');
-        if (liked) {
-          btn.classList.remove('text-gray-300', 'hover:text-red-400');
-          btn.classList.add('text-red-500');
-          icon.classList.remove('fa-regular');
-          icon.classList.add('fa-solid');
-        } else {
-          btn.classList.remove('text-red-500');
-          btn.classList.add('text-gray-300', 'hover:text-red-400');
-          icon.classList.remove('fa-solid');
-          icon.classList.add('fa-regular');
-        }
-        if (countEl) {
-          const current = parseInt(countEl.innerText, 10) || 0;
-          countEl.innerText = Math.max(0, current + delta);
-        }
-      });
-    }
   </script>
 </body>
 </html>
