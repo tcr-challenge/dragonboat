@@ -221,7 +221,7 @@
               <th class="py-3 px-1.5 w-[15%] text-left border-r border-red-600/30">Họ và tên</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
               <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
-              <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">Chiều cao - Cân nặng</th>
+              <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">Cao / Nặng</th>
               <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
               <th class="py-3 px-1.5 w-[6%] text-left border-r border-red-600/30">TDP</th>
@@ -400,6 +400,17 @@
       });
     });
 
+    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần, trong đó Leader phụ trách
+    // tổ dân phố đó luôn được xếp đứng đầu danh sách của tổ mình.
+    // Thứ tự ưu tiên giới tính trong cùng 1 tổ: Nữ đứng thành khối trước, Nam đứng thành khối sau.
+    // (Muốn đổi thứ tự ngược lại - Nam trước, Nữ sau - chỉ cần đảo 2 dòng bên trong object này)
+    const GENDER_ORDER = { 'nữ': 0, 'nam': 1 };
+    function genderRank(item) {
+      const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+      // Giới tính không xác định/khác được xếp ở cuối cùng, sau cả 2 khối Nam/Nữ
+      return g in GENDER_ORDER ? GENDER_ORDER[g] : 2;
+    }
+
     // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
     function sortAndRender(list) {
       const sortedList = [...list].sort((a, b) => {
@@ -408,7 +419,10 @@
         const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
         if (tdpCompare !== 0) return tdpCompare;
         // Cùng 1 tổ dân phố: Leader (nếu có) đứng đầu
-        return (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
+        const leaderCompare = (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
+        if (leaderCompare !== 0) return leaderCompare;
+        // Sau Leader: gom thành viên theo giới tính để Nữ đứng cạnh Nữ, Nam đứng cạnh Nam
+        return genderRank(a) - genderRank(b);
       });
       renderData(sortedList);
     }
@@ -439,14 +453,42 @@
         }
       });
 
+      let lastTdpKeyForStt = null;
+      let sttInGroup = 0;
+
       list.forEach((item, index) => {
         const currentTdpKey = item.toDanPho || 'Trống';
         const colorIdx = tdpColorMap[currentTdpKey];
         const assignedBgStyle = bgColorsTable[colorIdx];
         const assignedBorderStyle = borderColorsTable[colorIdx];
 
-        // STT hiển thị đếm liền mạch toàn danh sách (theo đúng thứ tự Tổ dân phố đã sắp xếp)
-        const displayStt = index + 1;
+        // STT hiển thị tính riêng theo từng Tổ dân phố (reset về 1 khi sang tổ khác),
+        // giống cách hiển thị của bản public.
+        const isNewGroup = currentTdpKey !== lastTdpKeyForStt;
+        if (isNewGroup) {
+          lastTdpKeyForStt = currentTdpKey;
+          sttInGroup = 0;
+        }
+        sttInGroup++;
+        const displayStt = sttInGroup;
+
+        // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
+        if (isNewGroup) {
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+
+          const trGroup = document.createElement('tr');
+          trGroup.innerHTML = `
+            <td colspan="12" class="py-2 px-3 bg-red-700 text-white font-bold text-xs tracking-wide">
+              <i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}
+            </td>
+          `;
+          tbody.appendChild(trGroup);
+
+          const cardGroup = document.createElement('div');
+          cardGroup.className = 'py-2 px-4 bg-red-700 text-white font-bold text-sm tracking-wide';
+          cardGroup.innerHTML = `<i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}`;
+          cardsContainer.appendChild(cardGroup);
+        }
 
         // 1. Giao diện bảng Desktop
         const tr = document.createElement('tr');
