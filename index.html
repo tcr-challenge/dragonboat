@@ -57,7 +57,7 @@
           <i class="fa-solid fa-users text-xl"></i>
         </div>
         <div class="flex items-baseline gap-2 flex-wrap">
-          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Thống kê thành viên đã đăng ký:</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">ĐÃ ĐĂNG KÝ:</span>
           <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
           <span class="text-sm font-medium text-gray-500">thành viên</span>
         </div>
@@ -71,7 +71,7 @@
           <i class="fa-solid fa-link text-xl"></i>
         </div>
         <div class="text-sm">
-          <span class="font-bold text-gray-700">Đăng ký tham gia câu lạc bộ:</span>
+          <span class="font-bold text-gray-700">Đăng ký tham gia:</span>
           <a href="https://vnshort.com/9iSi" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline break-all">https://vnshort.com/9iSi</a>
         </div>
       </div>
@@ -84,7 +84,7 @@
           <i class="fa-solid fa-user-tie text-xl"></i>
         </div>
         <div class="text-sm flex-1 min-w-0">
-          <span class="font-bold text-gray-700">Team Leader</span>
+          <span class="font-bold text-gray-700">TEAM LEADER </span>
           <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-white border border-amber-100">
@@ -173,9 +173,10 @@
         <table class="w-full text-left border-collapse" id="members-table">
           <thead>
             <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-              <th class="py-4 px-6 w-16 text-center border-r border-red-600/30"><i class="fa-solid fa-list-ol mr-1"></i> STT</th>
+              <th class="py-4 px-6 w-16 text-center border-r border-red-600/30"><i class="fa-solid fa-list-ol mr-1"></i></th>
               <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-user mr-1"></i> Họ và tên</th>
               <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-cake-candles mr-1"></i> Năm sinh</th>
+              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-ruler-vertical mr-1"></i> Chiều cao - Cân nặng</th>
               <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-venus-mars mr-1"></i> Giới tính</th>
               <th class="py-4 px-6"><i class="fa-solid fa-house-chimney mr-1"></i> Tổ dân phố</th>
             </tr>
@@ -231,8 +232,9 @@
   </footer>
 
   <script>
-    // Link API Google Apps Script của anh đã lưu cố định
-    const API_URL = "https://script.google.com/macros/s/AKfycbyleJAk0ILYaxNAYmEBAr7qVNgHovmSXjsIbewYLeYhxcVVoMy2QJ0__3xizrxwUvCnIQ/exec";
+    // Link API — gọi qua Cloudflare Worker trung gian (KHÔNG gọi thẳng Apps Script nữa),
+    // dùng chế độ "public" (mode=public) để chỉ nhận dữ liệu rút gọn, SĐT đã che.
+    const API_URL = "https://dragonboat-proxy.thuongcatdragonboat.workers.dev/?mode=public&token=9RfaQ6uzDr-46_MqFSSVY7VRJUdjlbjG";
 
     let allMembers = [];
 
@@ -299,6 +301,35 @@
     // ở phía sau để lấy bản mới nhất và cập nhật lại nếu có gì thay đổi. Nhờ vậy cảm giác
     // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
     const CACHE_KEY = 'clb_members_cache_v1';
+
+    // Rút gọn Chiều cao - Cân nặng: chỉ giữ lại số đo chiều cao (dạng 1m64, 165cm...)
+    // và cân nặng (dạng 88kg), bỏ hết dấu câu/ký tự thừa (-, ~, /, khoảng...).
+    // Vd: "1m64-~88kg" -> "1m64 / 88kg"
+    function formatChieuCaoCanNang(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+
+      let height = '';
+      let m = str.match(/(\d)\s*m\s*(\d{1,2})/i);
+      if (m) {
+        height = `${m[1]}m${m[2].padStart(2, '0')}`;
+      } else {
+        m = str.match(/(\d)[.,](\d{2})\s*m/i);
+        if (m) height = `${m[1]}m${m[2]}`;
+        else {
+          m = str.match(/(\d{2,3})\s*cm/i);
+          if (m) height = `${m[1]}cm`;
+        }
+      }
+
+      let weight = '';
+      m = str.match(/(\d{2,3}(?:[.,]\d{1,2})?)\s*kg/i);
+      if (m) weight = `${m[1]}kg`;
+
+      if (!height && !weight) return str;
+      return [height, weight].filter(Boolean).join(' / ');
+    }
 
     function showMembers(list) {
       allMembers = list;
@@ -392,6 +423,7 @@
           <td class="py-4 px-6 text-center text-gray-400 font-normal border-r border-gray-100/50">${index + 1}</td>
           <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${item.hoTen}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
+          <td class="py-4 px-6 text-center border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-4 px-6 text-gray-700 font-medium">${item.toDanPho || '---'}</td>
         `;
@@ -413,6 +445,8 @@
                   <span>${item.gioiTinh || '---'}</span>
                   <span class="mx-1 text-gray-300">|</span>
                   <span>${item.namSinh || '---'}</span>
+                  <span class="mx-1 text-gray-300">|</span>
+                  <span>${formatChieuCaoCanNang(item.chieuCaoCanNang)}</span>
                 </p>
               </div>
             </div>
@@ -431,6 +465,8 @@
                 <span>Năm sinh: <strong>${item.namSinh || '---'}</strong></span>
                 <span class="mx-1.5 text-gray-300">|</span>
                 <span>Giới tính: <strong>${item.gioiTinh || '---'}</strong></span>
+                <span class="mx-1.5 text-gray-300">|</span>
+                <span>Cao/Nặng: <strong>${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></span>
               </p>
             </div>
             <span class="shrink-0 text-xs font-semibold text-gray-700 bg-white/80 border border-black/5 px-2.5 py-1.5 rounded-md tracking-wide">${item.toDanPho || '---'}</span>
