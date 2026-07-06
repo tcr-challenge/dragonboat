@@ -218,17 +218,18 @@
           <thead>
             <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
               <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">STT</th>
-              <th class="py-3 px-1.5 w-[15%] text-left border-r border-red-600/30">Họ và tên</th>
+              <th class="py-3 px-1.5 w-[14%] text-left border-r border-red-600/30">Họ và tên</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
               <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
-              <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">Cao / Nặng</th>
+              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">Cao / Nặng</th>
+              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
               <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
               <th class="py-3 px-1.5 w-[6%] text-left border-r border-red-600/30">TDP</th>
-              <th class="py-3 px-1.5 w-[10%] text-left border-r border-red-600/30">Địa chỉ</th>
-              <th class="py-3 px-1.5 w-[10%] text-left border-r border-red-600/30">Kinh nghiệm</th>
-              <th class="py-3 px-1.5 w-[10%] text-left border-r border-red-600/30">Công việc</th>
-              <th class="py-3 px-1.5 w-[9%] text-center">Cam kết</th>
+              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Địa chỉ</th>
+              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Kinh nghiệm</th>
+              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Công việc</th>
+              <th class="py-3 px-1.5 w-[8%] text-center">Cam kết</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-xs font-medium text-gray-700">
@@ -478,7 +479,7 @@
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
-            <td colspan="12" class="py-2 px-3 bg-red-700 text-white font-bold text-xs tracking-wide">
+            <td colspan="13" class="py-2 px-3 bg-red-700 text-white font-bold text-xs tracking-wide">
               <i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}
             </td>
           `;
@@ -499,6 +500,7 @@
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
           <td class="py-2 px-1.5 text-center align-top border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.tayThuan || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
           <td class="py-2 px-1.5 align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDP(item.toDanPho)}</td>
@@ -521,6 +523,7 @@
             <p><span class="text-gray-400">DOB:</span> <strong class="text-gray-800">${formatNgaySinh(item.ngaySinh)}</strong></p>
             <p><span class="text-gray-400">GT:</span> <strong class="text-gray-800">${item.gioiTinh || '---'}</strong></p>
             <p><span class="text-gray-400">Cao/Nặng:</span> <strong class="text-gray-800">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></p>
+            <p><span class="text-gray-400">Tay thuận:</span> <strong class="text-gray-800">${item.tayThuan || '---'}</strong></p>
             <p><span class="text-gray-400">CCCD:</span> <strong class="text-gray-800">${formatCCCD(item.cccd)}</strong></p>
             <p><span class="text-gray-400">SĐT:</span> <a href="tel:${item.rawPhone}" class="font-semibold text-gray-800">${formatPhone(item.rawPhone)}</a></p>
             <p class="col-span-2"><span class="text-gray-400">TDP:</span> <strong class="text-gray-800">${formatTDP(item.toDanPho)}</strong></p>
