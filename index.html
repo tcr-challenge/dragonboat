@@ -3,13 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>CLB Thuyền Rồng - Đình Thượng Cát</title>
+
+  <!-- ⚡ TĂNG TỐC LOAD: mở kết nối sớm (DNS + TLS) tới các domain sẽ dùng, -->
+  <!-- giúp trình duyệt không phải mất thời gian "bắt tay" lại khi script/CSS/API thật sự được gọi -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://dragonboat-proxy.thuongcatdragonboat.workers.dev" crossorigin>
+  <link rel="dns-prefetch" href="https://www.youtube.com">
+
   <!-- Tailwind CSS để tạo giao diện nhanh, đẹp, chuẩn di động -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- FontAwesome để chèn icon -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+  <!-- FontAwesome để chèn icon (preload để trình duyệt tải song song, không chặn render) -->
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+  <!-- ⚡ Font Inter: preload không chặn render (thay vì @import làm chậm hiển thị trang) -->
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
     .bg-gradient-header {
       background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.png') center/cover no-repeat;
@@ -291,6 +305,30 @@
       </div>
     </div>
 
+    <!-- 6. VIDEO GIỚI THIỆU/TẬP LUYỆN CLB (nhúng từ YouTube) -->
+    <!-- 🎬 CHỖ THAY LINK VIDEO YOUTUBE:
+         Cách lấy ID video: mở video trên YouTube, copy đoạn mã sau "v=" trên URL.
+         Ví dụ URL: https://www.youtube.com/watch?v=dQw4w9WgXcQ  ->  ID là "dQw4w9WgXcQ"
+         Sau đó thay ID đó vào biến YOUTUBE_VIDEO_ID bên dưới (trong thẻ <script>),
+         KHÔNG cần sửa trực tiếp trong iframe vì src sẽ được JS tự động gán. -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mt-6">
+      <h3 class="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-red-700 mb-4">
+        <i class="fa-brands fa-youtube text-xl text-red-600"></i> Video Tập Luyện / Giới Thiệu CLB
+      </h3>
+      <div class="relative w-full overflow-hidden rounded-xl bg-black" style="aspect-ratio: 16 / 9;">
+        <iframe
+          id="youtube-video"
+          class="absolute inset-0 w-full h-full"
+          src=""
+          title="Video CLB Thuyền Rồng Đình Thượng Cát"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+
   </main>
 
   <!-- 5. FOOTER -->
@@ -313,7 +351,7 @@
         </div>
       </div>
       <div class="pt-4 text-center text-xs text-gray-500">
-        <p>&copy; 2026 Copyright by LangBenSong. All rights reserved.</p>
+        <p>&copy; 2026 Copyright by <a href="https://web.facebook.com/thuongcatbactuliemhanoi/" target="_blank" rel="noopener" class="text-gray-400 hover:text-white underline">LangBenSong</a>. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -322,6 +360,33 @@
     // Link API — gọi qua Cloudflare Worker trung gian (KHÔNG gọi thẳng Apps Script nữa),
     // dùng chế độ "public" (mode=public) để chỉ nhận dữ liệu rút gọn, SĐT đã che.
     const API_URL = "https://dragonboat-proxy.thuongcatdragonboat.workers.dev/?mode=public&token=9RfaQ6uzDr-46_MqFSSVY7VRJUdjlbjG";
+
+    // 🎬 ID video YouTube hiển thị ở cuối trang — thay ID này để đổi video (xem hướng dẫn phía trên khối HTML)
+    const YOUTUBE_VIDEO_ID = "1n7rdEwdgNQ";
+
+    // ⚡ Chỉ thực sự gán src cho iframe YouTube khi khối video sắp lọt vào tầm nhìn của người dùng
+    // (IntersectionObserver), thay vì tải sẵn từ đầu. YouTube nhúng khá nặng (kéo theo nhiều JS/CSS
+    // của Google), nên trì hoãn việc này giúp trang chính (danh sách thành viên) hiển thị nhanh hơn hẳn.
+    function initLazyYoutube() {
+      const iframe = document.getElementById('youtube-video');
+      if (!iframe || !YOUTUBE_VIDEO_ID) return;
+      const src = `https://www.youtube-nocookie.com/embed/${YOUTUBE_VIDEO_ID}`;
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              iframe.src = src;
+              observer.disconnect();
+            }
+          });
+        }, { rootMargin: '200px' });
+        observer.observe(iframe);
+      } else {
+        // Trình duyệt quá cũ không hỗ trợ IntersectionObserver: tải bình thường
+        iframe.src = src;
+      }
+    }
 
     let allMembers = [];
 
@@ -465,6 +530,8 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      initLazyYoutube();
+
       let hasCache = false;
       try {
         const cached = localStorage.getItem(CACHE_KEY);
@@ -490,14 +557,28 @@
 
     // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần, trong đó Leader phụ trách
     // tổ dân phố đó luôn được xếp đứng đầu danh sách của tổ mình.
+    // Thứ tự ưu tiên giới tính trong cùng 1 tổ: Nữ đứng thành khối trước, Nam đứng thành khối sau.
+    // (Muốn đổi thứ tự ngược lại - Nam trước, Nữ sau - chỉ cần đảo 2 dòng bên trong object này)
+    const GENDER_ORDER = { 'nữ': 0, 'nam': 1 };
+    function genderRank(item) {
+      const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+      // Giới tính không xác định/khác được xếp ở cuối cùng, sau cả 2 khối Nam/Nữ
+      return g in GENDER_ORDER ? GENDER_ORDER[g] : 2;
+    }
+
     function sortAndRender(list) {
       const sortedList = [...list].sort((a, b) => {
         const tdpA = a.toDanPho || '';
         const tdpB = b.toDanPho || '';
         const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
         if (tdpCompare !== 0) return tdpCompare;
+
         // Cùng 1 tổ dân phố: Leader (nếu có) đứng đầu
-        return (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
+        const leaderCompare = (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
+        if (leaderCompare !== 0) return leaderCompare;
+
+        // Sau Leader: gom thành viên theo giới tính để Nữ đứng cạnh Nữ, Nam đứng cạnh Nam
+        return genderRank(a) - genderRank(b);
       });
       renderData(sortedList);
     }
@@ -515,6 +596,13 @@
         return;
       }
       noResult.classList.add('hidden');
+
+      // ⚡ Dùng DocumentFragment làm "vùng đệm" ngoài DOM: mọi hàng/thẻ được dựng trong bộ nhớ
+      // trước, rồi mới chèn 1 LẦN DUY NHẤT vào bảng/danh sách thật. Nhờ vậy trình duyệt không
+      // phải tính toán lại giao diện (reflow) liên tục theo từng dòng như trước, giúp danh sách
+      // dài hiển thị mượt và nhanh hơn hẳn.
+      const tbodyFragment = document.createDocumentFragment();
+      const cardsFragment = document.createDocumentFragment();
 
       // Tạo bản đồ ánh xạ để gán màu cố định cho từng TDP xuất hiện trong danh sách
       const tdpColorMap = {};
@@ -557,12 +645,12 @@
               <i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}
             </td>
           `;
-          tbody.appendChild(trGroup);
+          tbodyFragment.appendChild(trGroup);
 
           const cardGroup = document.createElement('div');
           cardGroup.className = 'py-2 px-4 bg-red-700 text-white font-bold text-sm tracking-wide';
           cardGroup.innerHTML = `<i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}`;
-          cardsContainer.appendChild(cardGroup);
+          cardsFragment.appendChild(cardGroup);
         }
 
         // 1. Giao diện bảng Desktop
@@ -576,7 +664,7 @@
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-4 px-6 text-gray-700 font-medium">${item.toDanPho || '---'}</td>
         `;
-        tbody.appendChild(tr);
+        tbodyFragment.appendChild(tr);
 
         // 2. Giao diện dạng thẻ Mobile
         const card = document.createElement('div');
@@ -617,8 +705,12 @@
             <span class="shrink-0 mt-0.5 text-xs font-semibold text-gray-700 bg-white/80 border border-black/5 px-2.5 py-1.5 rounded-md tracking-wide">${item.toDanPho || '---'}</span>
           `;
         }
-        cardsContainer.appendChild(card);
+        cardsFragment.appendChild(card);
       });
+
+      // ⚡ Chèn toàn bộ dữ liệu đã dựng sẵn vào DOM thật CHỈ 1 LẦN ở đây
+      tbody.appendChild(tbodyFragment);
+      cardsContainer.appendChild(cardsFragment);
     }
 
     function filterMembers() {
