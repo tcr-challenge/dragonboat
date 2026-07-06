@@ -405,7 +405,10 @@
       const sortedList = [...list].sort((a, b) => {
         const tdpA = a.toDanPho || '';
         const tdpB = b.toDanPho || '';
-        return tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+        const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+        if (tdpCompare !== 0) return tdpCompare;
+        // Cùng 1 tổ dân phố: Leader (nếu có) đứng đầu
+        return (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
       });
       renderData(sortedList);
     }
@@ -442,12 +445,15 @@
         const assignedBgStyle = bgColorsTable[colorIdx];
         const assignedBorderStyle = borderColorsTable[colorIdx];
 
+        // STT hiển thị đếm liền mạch toàn danh sách (theo đúng thứ tự Tổ dân phố đã sắp xếp)
+        const displayStt = index + 1;
+
         // 1. Giao diện bảng Desktop
         const tr = document.createElement('tr');
         tr.className = `${assignedBgStyle} ${assignedBorderStyle} transition-colors`;
         tr.innerHTML = `
-          <td class="py-2 px-1.5 text-center align-top text-gray-400 font-normal border-r border-gray-100/50">${index + 1}</td>
-          <td class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${leaderBadge(item)}${item.hoTen}</td>
+          <td class="py-2 px-1.5 text-center align-top text-black font-normal border-r border-gray-100/50">${displayStt}</td>
+          <td class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${displayName(item)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
           <td class="py-2 px-1.5 text-center align-top border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
@@ -466,8 +472,8 @@
         card.className = `p-4 ${assignedBgStyle} ${assignedBorderStyle} border-b border-gray-100 transition-all`;
         card.innerHTML = `
           <div class="flex items-center gap-2 mb-2">
-            <span class="text-xs bg-black/5 text-gray-500 w-5 h-5 rounded-full inline-flex items-center justify-center font-normal shrink-0">${index + 1}</span>
-            <h4 class="font-bold text-gray-900 text-base truncate">${leaderBadge(item)}${item.hoTen}</h4>
+            <span class="text-xs bg-black/5 text-black font-normal w-5 h-5 rounded-full inline-flex items-center justify-center shrink-0">${displayStt}</span>
+            <h4 class="font-bold text-gray-900 text-base truncate">${displayName(item)}</h4>
           </div>
           <div class="pl-7 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
             <p><span class="text-gray-400">DOB:</span> <strong class="text-gray-800">${formatNgaySinh(item.ngaySinh)}</strong></p>
@@ -495,8 +501,13 @@
     }
     function leaderBadge(item) {
       return isLeader(item)
-        ? '<i class="fa-solid fa-shield-halved text-amber-500 mr-1" title="Leader CLB"></i>'
+        ? '<i class="fa-solid fa-shield-halved text-amber-500 ml-1.5" title="Leader CLB"></i>'
         : '';
+    }
+    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên
+    function displayName(item) {
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
+      return `${name}${leaderBadge(item)}`;
     }
 
 
