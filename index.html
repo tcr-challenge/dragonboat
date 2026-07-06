@@ -92,7 +92,7 @@
           <i class="fa-solid fa-users text-xl"></i>
         </div>
         <div class="flex items-baseline gap-2 flex-wrap">
-          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Thống kê thành viên đã đăng ký:</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">ĐÃ ĐĂNG KÝ THAM GIA:</span>
           <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
           <span class="text-sm font-medium text-gray-500">thành viên</span>
         </div>
@@ -106,7 +106,7 @@
           <i class="fa-solid fa-link text-xl"></i>
         </div>
         <div class="text-sm">
-          <span class="font-bold text-gray-700">Đăng ký tham gia câu lạc bộ:</span>
+          <span class="font-bold text-gray-700">Đăng ký tham gia dại đây:</span>
           <a href="https://vnshort.com/9iSi" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline break-all">https://vnshort.com/9iSi</a>
         </div>
       </div>
@@ -119,15 +119,15 @@
           <i class="fa-solid fa-user-tie text-xl"></i>
         </div>
         <div class="text-sm flex-1 min-w-0">
-          <span class="font-bold text-gray-700">Team Leader</span>
+          <span class="font-bold text-gray-700">TEAM LEADER - PHỤ TRÁCH TUYỂN QUÂN</span>
           <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-white border border-amber-100">
               <div class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">HN</div>
               <div class="min-w-0">
-                <p class="font-bold text-gray-900 text-sm truncate">Anh Hoàng Ngô</p>
+                <p class="font-bold text-gray-900 text-sm truncate">Anh Ngô Hữu Hoàng</p>
                 <a href="tel:0977212534" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0977 212534
+                  <i class="fa-solid fa-phone text-[10px]"></i> 0977 212 534
                 </a>
                 <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Tổ 1 + 4</span>
               </div>
@@ -136,9 +136,9 @@
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100">
               <div class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">VM</div>
               <div class="min-w-0">
-                <p class="font-bold text-gray-900 text-sm truncate">Anh Văn Mạnh</p>
+                <p class="font-bold text-gray-900 text-sm truncate">Anh Nguyễn Văn Mạnh</p>
                 <a href="tel:0967247993" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0967 247993
+                  <i class="fa-solid fa-phone text-[10px]"></i> 0967 247 993
                 </a>
                 <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Tổ 2</span>
               </div>
@@ -147,9 +147,9 @@
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-100">
               <div class="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">BT</div>
               <div class="min-w-0">
-                <p class="font-bold text-gray-900 text-sm truncate">Anh Bá Tuyên</p>
+                <p class="font-bold text-gray-900 text-sm truncate">Anh Nguyễn Bá Tuyên</p>
                 <a href="tel:0867731918" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0867 731918
+                  <i class="fa-solid fa-phone text-[10px]"></i> 0867 731 918
                 </a>
                 <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Tổ 3</span>
               </div>
@@ -322,6 +322,7 @@
     // Link API — gọi qua Cloudflare Worker trung gian (KHÔNG gọi thẳng Apps Script nữa),
     // dùng chế độ "public" (mode=public) để chỉ nhận dữ liệu rút gọn, SĐT đã che.
     const API_URL = "https://dragonboat-proxy.thuongcatdragonboat.workers.dev/?mode=public&token=9RfaQ6uzDr-46_MqFSSVY7VRJUdjlbjG";
+
     let allMembers = [];
 
     // Nhận diện thiết bị di động thực sự để hiển thị giao diện tối giản hơn.
@@ -397,8 +398,22 @@
     }
     function leaderBadge(item) {
       return isLeader(item)
-        ? '<i class="fa-solid fa-shield-halved text-amber-500 mr-1" title="Leader CLB"></i>'
+        ? '<i class="fa-solid fa-shield-halved text-amber-500 ml-1.5" title="Leader CLB"></i>'
         : '';
+    }
+    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên
+    function displayName(item) {
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
+      return `${name}${leaderBadge(item)}`;
+    }
+
+    // Bỏ tiền tố "TDP" / "Tổ dân phố" thừa trong dữ liệu thô, chỉ giữ phần tên/số phía sau
+    function formatTDP(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+      const cleaned = str.replace(/^(TDP|Tổ\s*dân\s*phố)[\s.:\-]*/i, '').trim();
+      return cleaned || str;
     }
 
     // Rút gọn Chiều cao - Cân nặng: chỉ giữ lại số đo chiều cao (dạng 1m64, 165cm...)
@@ -473,12 +488,16 @@
       });
     });
 
-    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
+    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần, trong đó Leader phụ trách
+    // tổ dân phố đó luôn được xếp đứng đầu danh sách của tổ mình.
     function sortAndRender(list) {
       const sortedList = [...list].sort((a, b) => {
         const tdpA = a.toDanPho || '';
         const tdpB = b.toDanPho || '';
-        return tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+        const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+        if (tdpCompare !== 0) return tdpCompare;
+        // Cùng 1 tổ dân phố: Leader (nếu có) đứng đầu
+        return (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
       });
       renderData(sortedList);
     }
@@ -509,18 +528,49 @@
         }
       });
 
+      let lastTdpKeyForStt = null;
+      let sttInGroup = 0;
+
       list.forEach((item, index) => {
         const currentTdpKey = item.toDanPho || 'Trống';
         const colorIdx = tdpColorMap[currentTdpKey];
         const assignedBgStyle = bgColorsTable[colorIdx];
         const assignedBorderStyle = borderColorsTable[colorIdx];
 
+        // STT hiển thị tính riêng theo từng Tổ dân phố (reset về 1 khi sang tổ khác),
+        // không còn đánh số liền mạch toàn danh sách nữa.
+        const isNewGroup = currentTdpKey !== lastTdpKeyForStt;
+        if (isNewGroup) {
+          lastTdpKeyForStt = currentTdpKey;
+          sttInGroup = 0;
+        }
+        sttInGroup++;
+        const displayStt = sttInGroup;
+
+        // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
+        if (isNewGroup) {
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+
+          const trGroup = document.createElement('tr');
+          trGroup.innerHTML = `
+            <td colspan="6" class="py-2.5 px-6 bg-red-700 text-white font-bold text-sm tracking-wide">
+              <i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}
+            </td>
+          `;
+          tbody.appendChild(trGroup);
+
+          const cardGroup = document.createElement('div');
+          cardGroup.className = 'py-2 px-4 bg-red-700 text-white font-bold text-sm tracking-wide';
+          cardGroup.innerHTML = `<i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}`;
+          cardsContainer.appendChild(cardGroup);
+        }
+
         // 1. Giao diện bảng Desktop
         const tr = document.createElement('tr');
         tr.className = `${assignedBgStyle} ${assignedBorderStyle} transition-colors`;
         tr.innerHTML = `
-          <td class="py-4 px-6 text-center text-gray-400 font-normal border-r border-gray-100/50">${index + 1}</td>
-          <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${leaderBadge(item)}${item.hoTen}</td>
+          <td class="py-4 px-6 text-center text-black font-normal border-r border-gray-100/50">${displayStt}</td>
+          <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${displayName(item)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
@@ -537,9 +587,9 @@
           card.className = `px-3 py-2.5 ${assignedBgStyle} ${assignedBorderStyle} border-b border-gray-100 transition-all flex justify-between items-start gap-2`;
           card.innerHTML = `
             <div class="flex items-start gap-2 min-w-0">
-              <span class="mt-0.5 text-[10px] bg-black/5 text-gray-500 w-4.5 h-4.5 rounded-full inline-flex items-center justify-center font-normal shrink-0">${index + 1}</span>
+              <span class="mt-0.5 text-[10px] bg-black/5 text-black font-normal w-4.5 h-4.5 rounded-full inline-flex items-center justify-center shrink-0">${displayStt}</span>
               <div class="min-w-0">
-                <h4 class="font-semibold text-gray-900 text-sm truncate">${leaderBadge(item)}${item.hoTen}</h4>
+                <h4 class="font-semibold text-gray-900 text-sm truncate">${displayName(item)}</h4>
                 <p class="text-[11px] text-gray-500 leading-relaxed">
                   <span class="block">Năm sinh: <strong class="text-gray-700">${item.namSinh || '---'}</strong></span>
                   <span class="block">Giới tính: <strong class="text-gray-700">${item.gioiTinh || '---'}</strong></span>
@@ -555,8 +605,8 @@
           card.innerHTML = `
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="text-xs bg-black/5 text-gray-500 w-5 h-5 rounded-full inline-flex items-center justify-center font-normal">${index + 1}</span>
-                <h4 class="font-bold text-gray-900 text-base">${leaderBadge(item)}${item.hoTen}</h4>
+                <span class="text-xs bg-black/5 text-black font-normal w-5 h-5 rounded-full inline-flex items-center justify-center">${displayStt}</span>
+                <h4 class="font-bold text-gray-900 text-base">${displayName(item)}</h4>
               </div>
               <p class="text-xs text-gray-600 pl-7 leading-relaxed">
                 <span class="block">Năm sinh: <strong>${item.namSinh || '---'}</strong></span>
