@@ -17,6 +17,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <!-- FontAwesome để chèn icon -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Thư viện xuất Excel (.xlsx) có hỗ trợ tô màu/định dạng ô (fork của SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -131,9 +133,14 @@
           <span class="text-sm font-medium text-gray-500">thành viên</span>
         </div>
       </div>
-      <button onclick="window.print()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
-        <i class="fa-solid fa-file-pdf"></i> In / Xuất PDF
-      </button>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+        <button onclick="window.print()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
+          <i class="fa-solid fa-file-pdf"></i> In / Xuất PDF
+        </button>
+      </div>
     </div>
 
     <!-- 2. MỤC TÌM KIẾM -->
@@ -412,9 +419,13 @@
       return g in GENDER_ORDER ? GENDER_ORDER[g] : 2;
     }
 
+    // Danh sách đã sắp xếp hiện đang hiển thị (dùng chung cho bảng web + xuất Excel,
+    // để Excel luôn khớp với đúng những gì đang thấy trên web, kể cả khi đang lọc tìm kiếm)
+    let currentSortedList = [];
+
     // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
-    function sortAndRender(list) {
-      const sortedList = [...list].sort((a, b) => {
+    function sortMembers(list) {
+      return [...list].sort((a, b) => {
         const tdpA = a.toDanPho || '';
         const tdpB = b.toDanPho || '';
         const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
@@ -425,6 +436,11 @@
         // Sau Leader: gom thành viên theo giới tính để Nữ đứng cạnh Nữ, Nam đứng cạnh Nam
         return genderRank(a) - genderRank(b);
       });
+    }
+
+    function sortAndRender(list) {
+      const sortedList = sortMembers(list);
+      currentSortedList = sortedList;
       renderData(sortedList);
     }
 
@@ -675,6 +691,219 @@
 
       // Lọc xong vẫn gọi hàm gom nhóm sắp xếp theo TDP
       sortAndRender(filtered);
+    }
+
+    // ============================================================
+    // ===================  XUẤT FILE EXCEL  =====================
+    // ============================================================
+    // Yêu cầu: (1) đầu mục cột giống hệt bảng trên web, (2) KHÔNG chèn dòng
+    // phân tách "TỔ DÂN PHỐ ..." như trên web/bản in, (3) số thứ tự (STT)
+    // chạy liên tục từ 1 tới hết toàn bộ danh sách (không reset theo từng tổ),
+    // (4) trình bày đẹp, hiện đại: có tiêu đề, màu theo tổ dân phố, viền, bo,
+    // căn giữa/căn lề hợp lý, tự co giãn độ rộng cột.
+
+    // Tên hiển thị dạng CHỮ THƯỜNG (không icon) cho Excel — Leader được đánh dấu bằng ★
+    function displayNamePlain(item) {
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
+      return isLeader(item) ? `★ ${name}` : name;
+    }
+
+    // Bản CCCD dạng văn bản thuần (không chứa thẻ HTML), số và ngày cấp cách nhau bằng xuống dòng
+    function formatCCCDPlain(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      if (!number && !date) return '---';
+      return [number, date].filter(Boolean).join('\n');
+    }
+
+    // Bảng màu nền (mã HEX) theo từng Tổ dân phố — tương ứng với bgColorsTable dùng trên web,
+    // giúp file Excel vẫn phân biệt trực quan từng tổ dù đã bỏ dòng tiêu đề phân tách.
+    const tdpColorHexTable = [
+      'F1F5F9', // slate-100
+      'DBEAFE', // blue-100
+      'FEF3C7', // amber-100
+      'D1FAE5', // emerald-100
+      'F3E8FF', // purple-100
+      'FFEDD5', // orange-100
+      'CCFBF1', // teal-100
+      'FFE4E6', // rose-100
+      'E0E7FF', // indigo-100
+      'ECFCCB'  // lime-100
+    ];
+
+    const EXCEL_HEADERS = [
+      'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Tay thuận',
+      'CCCD', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
+    ];
+    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 13 cột -> cột cuối là "M"
+    const EXCEL_LAST_COL_LETTER = 'M';
+
+    function thinBorder(colorHex) {
+      const side = { style: 'thin', color: { rgb: colorHex } };
+      return { top: side, bottom: side, left: side, right: side };
+    }
+
+    function exportToExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('Không tải được thư viện xuất Excel. Vui lòng kiểm tra kết nối mạng rồi thử lại.');
+        return;
+      }
+      // Xuất đúng danh sách đang hiển thị trên web hiện tại (đã áp dụng tìm kiếm/lọc nếu có),
+      // đã sắp xếp theo Tổ dân phố, nhưng KHÔNG có dòng tiêu đề phân tách từng tổ.
+      const list = currentSortedList;
+      if (!list || list.length === 0) {
+        alert('Không có dữ liệu để xuất Excel!');
+        return;
+      }
+
+      // Gán màu cố định cho từng Tổ dân phố theo đúng thứ tự xuất hiện (giống bảng web)
+      const tdpColorMap = {};
+      let colorIdx = 0;
+      list.forEach(item => {
+        const key = item.toDanPho || 'Trống';
+        if (!(key in tdpColorMap)) {
+          tdpColorMap[key] = colorIdx % tdpColorHexTable.length;
+          colorIdx++;
+        }
+      });
+
+      // ---- Xây dữ liệu dạng mảng 2 chiều (AOA) ----
+      const titleRow1 = ['CÂU LẠC BỘ THUYỀN RỒNG - ĐÌNH THƯỢNG CÁT'];
+      const titleRow2 = ['DANH SÁCH THÀNH VIÊN ĐĂNG KÝ'];
+      const dateRow = ['Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '   |   Tổng số: ' + list.length + ' thành viên'];
+
+      const dataRows = list.map((item, idx) => ([
+        idx + 1, // STT chạy liên tục từ đầu tới cuối
+        displayNamePlain(item),
+        formatNgaySinh(item.ngaySinh),
+        item.gioiTinh || '---',
+        formatChieuCaoCanNang(item.chieuCaoCanNang),
+        item.tayThuan || '---',
+        formatCCCDPlain(item.cccd),
+        formatPhone(item.rawPhone),
+        formatTDP(item.toDanPho),
+        item.diaChi || '---',
+        item.kinhNghiem || '---',
+        item.congViec || '---',
+        item.camKet ? 'Cam kết' : '---'
+      ]));
+
+      const HEADER_ROW_INDEX = 3; // sau 3 dòng tiêu đề (0,1,2) -> header ở dòng 4 (index 3)
+      const DATA_START_INDEX = HEADER_ROW_INDEX + 1;
+
+      const aoa = [titleRow1, titleRow2, dateRow, EXCEL_HEADERS, ...dataRows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      // ---- Gộp ô cho 3 dòng tiêu đề ----
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: EXCEL_COL_COUNT - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: EXCEL_COL_COUNT - 1 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: EXCEL_COL_COUNT - 1 } }
+      ];
+
+      // ---- Độ rộng từng cột (tương ứng tỉ lệ % trên web) ----
+      ws['!cols'] = [
+        { wch: 6 },  // STT
+        { wch: 24 }, // Họ và tên
+        { wch: 12 }, // Ngày sinh
+        { wch: 9 },  // Giới tính
+        { wch: 12 }, // Cao/Nặng
+        { wch: 10 }, // Tay thuận
+        { wch: 16 }, // CCCD
+        { wch: 14 }, // SĐT
+        { wch: 18 }, // TDP
+        { wch: 26 }, // Địa chỉ
+        { wch: 24 }, // Kinh nghiệm
+        { wch: 24 }, // Công việc
+        { wch: 11 }  // Cam kết
+      ];
+
+      // ---- Chiều cao dòng ----
+      ws['!rows'] = aoa.map((_, r) => {
+        if (r === 0) return { hpt: 26 };
+        if (r === 1) return { hpt: 20 };
+        if (r === 2) return { hpt: 16 };
+        if (r === HEADER_ROW_INDEX) return { hpt: 24 };
+        return { hpt: 20 };
+      });
+
+      // ---- Bật bộ lọc tự động ngay trên dòng tiêu đề cột ----
+      ws['!autofilter'] = {
+        ref: `A${HEADER_ROW_INDEX + 1}:${EXCEL_LAST_COL_LETTER}${HEADER_ROW_INDEX + 1}`
+      };
+
+      // ---- Cố định (freeze) phần tiêu đề khi cuộn ----
+      ws['!freeze'] = { xSplit: 0, ySplit: HEADER_ROW_INDEX + 1 };
+      ws['!sheetViews'] = [{ state: 'frozen', xSplit: 0, ySplit: HEADER_ROW_INDEX + 1, topLeftCell: `A${HEADER_ROW_INDEX + 2}` }];
+
+      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 12]); // STT, DOB, GT, Cao/Nặng, Tay thuận, CCCD, SĐT, Cam kết
+
+      // ---- Style dòng tiêu đề CLB (dòng 1-2) ----
+      ['A1', 'A2'].forEach((addr, i) => {
+        if (!ws[addr]) return;
+        ws[addr].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: i === 0 ? 16 : 12, name: 'Calibri' },
+          fill: { fgColor: { rgb: 'B91C1C' } },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      });
+      if (ws['A3']) {
+        ws['A3'].s = {
+          font: { italic: true, color: { rgb: '6B7280' }, sz: 10, name: 'Calibri' },
+          fill: { fgColor: { rgb: 'FFF7ED' } },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      }
+
+      // ---- Style dòng tiêu đề cột (header bảng) ----
+      for (let c = 0; c < EXCEL_COL_COUNT; c++) {
+        const addr = XLSX.utils.encode_cell({ r: HEADER_ROW_INDEX, c });
+        if (!ws[addr]) continue;
+        ws[addr].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11, name: 'Calibri' },
+          fill: { fgColor: { rgb: '991B1B' } },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: thinBorder('7F1D1D')
+        };
+      }
+
+      // ---- Style từng ô dữ liệu ----
+      list.forEach((item, rIdx) => {
+        const rowIndexInSheet = DATA_START_INDEX + rIdx;
+        const key = item.toDanPho || 'Trống';
+        const colorHex = tdpColorHexTable[tdpColorMap[key]];
+
+        for (let c = 0; c < EXCEL_COL_COUNT; c++) {
+          const addr = XLSX.utils.encode_cell({ r: rowIndexInSheet, c });
+          if (!ws[addr]) continue;
+          ws[addr].s = {
+            font: { color: { rgb: '1F2937' }, sz: 10.5, name: 'Calibri', bold: c === 1 },
+            fill: { fgColor: { rgb: colorHex } },
+            alignment: {
+              horizontal: CENTER_COLS.has(c) ? 'center' : 'left',
+              vertical: 'center',
+              wrapText: true
+            },
+            border: thinBorder('D1D5DB')
+          };
+        }
+      });
+
+      // ---- Xuất file ----
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách thành viên');
+
+      const now = new Date();
+      const pad = (n) => n.toString().padStart(2, '0');
+      const fileName = `DanhSach_ThanhVien_CLB_ThuyenRong_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
     }
 
   </script>
