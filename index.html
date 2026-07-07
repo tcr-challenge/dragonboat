@@ -26,7 +26,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     .bg-gradient-header {
-      background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.jpg') center/cover no-repeat;
+      background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.png') center/cover no-repeat;
       /* 🖼️ CHỖ THAY ẢNH BANNER (2/2): muốn dùng hẳn 1 tấm ẢNH làm nền banner đỏ thay vì màu gradient,
          xoá dòng "background: linear-gradient(...)" phía trên và thêm dòng dưới đây (bỏ dấu / * * / để kích hoạt):
          background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
@@ -575,6 +575,20 @@
     // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
     const CACHE_KEY = 'clb_members_cache_v1';
 
+    // Chuẩn hóa họ tên về dạng "Viết hoa chữ cái đầu mỗi từ" (Title Case tiếng Việt),
+    // áp dụng cho THÀNH VIÊN thường (không phải Leader). Xử lý mọi kiểu gõ lộn xộn trong
+    // dữ liệu thô: "NGUYỄN HOÀNG TUẤN", "nguyễn văn long", "hoàng trọng Lân"
+    // -> đều ra thành "Nguyễn Hoàng Tuấn", "Nguyễn Văn Long", "Hoàng Trọng Lân".
+    function toTitleCaseVN(str) {
+      if (!str) return str;
+      return str.toString().trim().split(/\s+/).map(word => {
+        if (!word) return word;
+        const first = word.charAt(0).toLocaleUpperCase('vi');
+        const rest = word.slice(1).toLocaleLowerCase('vi');
+        return first + rest;
+      }).join(' ');
+    }
+
     // Danh sách 4 số cuối SĐT của các Leader CLB — dùng để tự động gắn icon Leader trước tên
     // trong danh sách, dù là SĐT thật (bản nội bộ) hay SĐT đã che (bản public) vẫn nhận diện được.
     const LEADER_PHONE_LAST4 = ['7993', '2534', '1918']; // Văn Mạnh, Hoàng Ngô, Bá Tuyên
@@ -587,10 +601,14 @@
         ? '<i class="fa-solid fa-shield-halved text-amber-500 ml-1.5" title="Leader CLB"></i>'
         : '';
     }
-    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên
+    // Tên hiển thị:
+    // - Leader: viết HOA toàn bộ + màu đỏ đậm riêng biệt (dễ nhận diện ngay giữa danh sách) + icon cuối tên.
+    // - Thành viên thường: luôn chuẩn hóa về "Viết hoa chữ cái đầu mỗi từ", bất kể dữ liệu gốc nhập kiểu gì.
     function displayName(item) {
-      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
-      return `${name}${leaderBadge(item)}`;
+      if (isLeader(item)) {
+        return `<span class="text-red-700 font-extrabold">${item.hoTen.toUpperCase()}</span>${leaderBadge(item)}`;
+      }
+      return `<span>${toTitleCaseVN(item.hoTen)}</span>`;
     }
 
     // Bỏ tiền tố "TDP" / "Tổ dân phố" thừa trong dữ liệu thô, chỉ giữ phần tên/số phía sau
@@ -752,6 +770,17 @@
         tdpCountMap[key] = (tdpCountMap[key] || 0) + 1;
       });
 
+      // Đếm riêng số Nam / số Nữ của từng Tổ dân phố, để hiển thị kèm trên dòng tiêu đề nhóm
+      // (vd: "... - Tổng 16 thành viên (Nam: 10 - Nữ: 6)")
+      const tdpGenderCountMap = {};
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        if (!tdpGenderCountMap[key]) tdpGenderCountMap[key] = { nam: 0, nu: 0 };
+        const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+        if (g === 'nam') tdpGenderCountMap[key].nam++;
+        else if (g === 'nữ' || g === 'nu') tdpGenderCountMap[key].nu++;
+      });
+
       let lastTdpKeyForStt = null;
       let sttInGroup = 0;
 
@@ -773,7 +802,8 @@
 
         // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
         if (isNewGroup) {
-          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()} - Tổng ${tdpCountMap[currentTdpKey] || 0} thành viên`;
+          const genderCount = tdpGenderCountMap[currentTdpKey] || { nam: 0, nu: 0 };
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()} - Tổng ${tdpCountMap[currentTdpKey] || 0} thành viên (Nam: ${genderCount.nam} - Nữ: ${genderCount.nu})`;
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
