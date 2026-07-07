@@ -32,6 +32,59 @@
          background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
       */
     }
+
+    /* Mọi nút bấm / liên kết đều hiện con trỏ tay khi rê chuột, giúp dễ nhận biết đâu là nơi bấm được */
+    button, a, [role="button"], .cursor-pointer { cursor: pointer; }
+
+    /* ===== CHẾ ĐỘ IN / XUẤT PDF (Tab 3) =====
+       Khi bấm nút "In / Xuất PDF" ở Tab 3, trình duyệt sẽ mở hộp thoại in.
+       CSS bên dưới đảm bảo bản in hiển thị dạng BẢNG đầy đủ (kể cả khi đang xem trên điện thoại),
+       ẩn bớt các phần không cần thiết (ô tìm kiếm, 3 tab, video, nút bấm...) để bản in/PDF gọn, đẹp,
+       chỉ còn: Tiêu đề -> 3 Team Leader -> Danh sách thành viên -> Footer. */
+    @page {
+      size: portrait;
+      margin: 12mm 10mm;
+    }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      #table-container-desktop { display: block !important; overflow: visible !important; }
+      #cards-header, #cards-container { display: none !important; }
+      main { max-width: 100% !important; padding: 0 !important; }
+      table { font-size: 10px; width: 100%; table-layout: fixed; }
+      th, td { padding: 4px 6px !important; word-wrap: break-word; overflow-wrap: break-word; }
+      .rounded-2xl, .shadow-sm, .shadow-lg { box-shadow: none !important; border-radius: 0 !important; }
+      tr, .border-b { break-inside: avoid; }
+
+      /* ⚠️ Yêu cầu 1: Tên Team Leader bị cắt/mất chữ khi in ở tỉ lệ 100% do bị "truncate"
+         (ẩn bớt chữ + ...) và bị bó hẹp trong 3 cột cạnh nhau. Bản in: bỏ truncate,
+         cho chữ tự xuống dòng nếu cần, và xếp Team Leader thành 1 cột dọc để có đủ
+         chiều rộng hiển thị TRỌN VẸN họ tên, không bị mất chữ nữa. */
+      .truncate { overflow: visible !important; text-overflow: unset !important; white-space: normal !important; }
+      div[class*="sm:grid-cols-3"] { display: block !important; }
+      div[class*="sm:grid-cols-3"] > div { margin-bottom: 6px; break-inside: avoid; }
+
+      /* ⚠️ Yêu cầu 2: Bỏ banner (nền đỏ/ảnh nền) ở header khi in để tránh tốn mực in đen/đỏ đậm,
+         đồng thời đổi chữ sang màu tối để vẫn đọc rõ trên nền trắng. */
+      header.bg-gradient-header { background: #ffffff !important; }
+      header .absolute.inset-0 { display: none !important; }
+      header h1 { color: #7f1d1d !important; text-shadow: none !important; }
+      header h2 { color: #b45309 !important; text-shadow: none !important; }
+      header p.header-subtitle { color: #7f1d1d !important; background: transparent !important; text-transform: uppercase !important; }
+      header p.header-subtitle i { display: none !important; }
+
+      /* ⚠️ Yêu cầu 4: Bỏ nền tối của Footer khi in, đổi sang nền sáng + chữ tối để không bị đen bản in. */
+      footer { background: #ffffff !important; color: #1f2937 !important; }
+      footer * { border-color: #e5e7eb !important; }
+      footer h4, footer h5 { color: #111827 !important; }
+      footer p, footer span, footer i, footer a { color: #374151 !important; }
+    }
+    .print-only { display: none; }
+    @media print { .print-only { display: block !important; } }
+    /* Giống .print-only nhưng hiển thị dạng "inline" (dùng cho chữ nằm chung dòng, vd tiêu đề cột bảng) */
+    .print-only-inline { display: none; }
+    @media print { .print-only-inline { display: inline !important; } }
   </style>
 
   <style>
@@ -67,9 +120,28 @@
       0%, 100% { opacity: 1; }
       50%      { opacity: 0.6; }
     }
+
+    /* ===== LOGO HEADER: THUYỀN RỒNG MINI ĐANG CHÈO (thu nhỏ từ hoạt cảnh loading) =====
+       Cùng cơ chế/animation với khối "boat-loading-scene" phía trên (bơi + chèo + sóng nước),
+       chỉ thu nhỏ kích thước lại để vừa khung logo trên banner đỏ đầu trang. */
+    .hlogo-scene { position: relative; width: 118px; height: 50px; margin: 0 auto; }
+    .hlogo-boat { position: absolute; left: 0; top: 0; width: 118px; height: 38px; z-index: 2; }
+    .hlogo-wave-wrap { position: absolute; left: 0; bottom: 0; width: 118px; height: 16px; overflow: hidden; z-index: 1; }
+    .hlogo-wave-svg { position: absolute; top: 0; left: 0; height: 100%; width: 236px; }
+    @media (min-width: 768px) {
+      .hlogo-scene { width: 140px; height: 58px; }
+      .hlogo-boat { width: 140px; height: 44px; }
+      .hlogo-wave-wrap { width: 140px; height: 18px; }
+      .hlogo-wave-svg { width: 280px; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- Ghi chú nhỏ chỉ hiện ra khi IN / xuất PDF, nằm ở đầu trang in -->
+  <div class="print-only text-center py-1">
+    <p class="text-[9px] text-gray-500">&copy; 2026 Copyright by <a href="https://web.facebook.com/thuongcatbactuliemhanoi/" class="underline">LangBenSong</a>. All rights reserved</p>
+  </div>
 
   <!-- 1. BANNER -->
   <header class="bg-gradient-header text-white shadow-lg relative overflow-hidden">
@@ -79,8 +151,54 @@
            A) Đổi LOGO tròn: xoá thẻ <i class="fa-solid fa-ship..."></i> bên dưới,
               thay bằng: <img src="ĐƯỜNG_DẪN_ẢNH_LOGO_CỦA_ANH.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover">
            B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
-      <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
-        <i class="fa-solid fa-ship text-3xl md:text-4xl text-amber-400"></i>
+      <div class="inline-block px-3 py-2.5 bg-white/10 rounded-2xl mb-3 backdrop-blur-sm">
+        <div class="hlogo-scene" aria-hidden="true">
+          <!-- Sóng nước mini (2 lớp chạy ngược chiều, dùng lại đúng animation của icon loading) -->
+          <div class="hlogo-wave-wrap">
+            <svg class="hlogo-wave-svg boat-wave-back" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,20 Q13.75,10 27.5,20 T55,20 T82.5,20 T110,20 T137.5,20 T165,20 T192.5,20 T220,20 T247.5,20 T275,20 T302.5,20 T330,20 T357.5,20 T385,20 T412.5,20 T440,20 V34 H0 Z" fill="#60a5fa" opacity="0.55"/>
+            </svg>
+            <svg class="hlogo-wave-svg boat-wave-front" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,22 Q13.75,14 27.5,22 T55,22 T82.5,22 T110,22 T137.5,22 T165,22 T192.5,22 T220,22 T247.5,22 T275,22 T302.5,22 T330,22 T357.5,22 T385,22 T412.5,22 T440,22 V34 H0 Z" fill="#3b82f6"/>
+            </svg>
+          </div>
+
+          <!-- Thuyền rồng mini + 4 tay chèo (màu vàng/gold để nổi bật trên nền đỏ của banner) -->
+          <svg class="hlogo-boat" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="boat-bob-group">
+              <!-- Thân thuyền -->
+              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#fcd34d" stroke="#92400e" stroke-width="1.5"/>
+              <!-- Đầu rồng phía mũi thuyền -->
+              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#fbbf24" stroke="#92400e" stroke-width="1"/>
+              <circle cx="9" cy="35" r="1.6" fill="#7f1d1d"/>
+              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fef3c7" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Đuôi rồng phía lái thuyền -->
+              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#fbbf24"/>
+
+              <!-- 4 người đang chèo thuyền, tay chèo chuyển động so le -->
+              <g>
+                <circle cx="55" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="50" y="38" width="10" height="10" rx="3" fill="#dc2626"/>
+                <line x1="59" y1="40" x2="74" y2="30" stroke="#fef3c7" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-1"/>
+              </g>
+              <g>
+                <circle cx="90" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="85" y="38" width="10" height="10" rx="3" fill="#059669"/>
+                <line x1="94" y1="40" x2="109" y2="30" stroke="#fef3c7" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-2"/>
+              </g>
+              <g>
+                <circle cx="125" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="120" y="38" width="10" height="10" rx="3" fill="#2563eb"/>
+                <line x1="129" y1="40" x2="144" y2="30" stroke="#fef3c7" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-3"/>
+              </g>
+              <g>
+                <circle cx="160" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="155" y="38" width="10" height="10" rx="3" fill="#7f1d1d"/>
+                <line x1="164" y1="40" x2="179" y2="30" stroke="#fef3c7" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
       </div>
       <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
         CÂU LẠC BỘ THUYỀN RỒNG
@@ -88,7 +206,7 @@
       <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
         ĐÌNH THƯỢNG CÁT
       </h2>
-      <p class="text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
+      <p class="header-subtitle text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
         <i class="fa-solid fa-users mr-1.5"></i> Danh Sách Thành Viên Đăng Ký
       </p>
     </div>
@@ -101,7 +219,7 @@
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 space-y-4">
 
       <!-- Dòng 1: Thống kê tổng số thành viên -->
-      <div class="flex items-center gap-3.5">
+      <div class="flex items-center gap-3.5 no-print">
         <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 shrink-0">
           <i class="fa-solid fa-users text-xl"></i>
         </div>
@@ -112,10 +230,10 @@
         </div>
       </div>
 
-      <div class="border-t border-gray-100"></div>
+      <div class="border-t border-gray-100 no-print"></div>
 
       <!-- Dòng 2: Link đăng ký tham gia CLB -->
-      <div class="flex items-center gap-3.5">
+      <div class="flex items-center gap-3.5 no-print">
         <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
           <i class="fa-solid fa-link text-xl"></i>
         </div>
@@ -176,7 +294,7 @@
     </div>
 
     <!-- 2. MỤC TÌM KIẾM -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 no-print">
       <div class="relative">
         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
           <i class="fa-solid fa-magnifying-glass"></i>
@@ -192,7 +310,7 @@
     </div>
 
     <!-- 3. BA TAB CHỨC NĂNG -->
-    <div class="mb-6">
+    <div class="mb-6 no-print">
       <nav class="flex gap-2" aria-label="Tabs">
         <button class="flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl bg-red-600 text-white shadow-md shadow-red-600/30 transition-all">
           <i class="fa-solid fa-id-card text-lg"></i>
@@ -202,14 +320,17 @@
           <i class="fa-solid fa-clock-rotate-left text-lg"></i>
           <span class="text-xs font-medium">Updating...</span>
         </button>
-        <button onclick="alert('Tính năng đang được phát triển và sẽ cập nhật sau')" class="flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">
-          <i class="fa-solid fa-gear text-lg"></i>
-          <span class="text-xs font-medium">Updating...</span>
+        <button onclick="window.print()" class="flex-1 flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm transition-all">
+          <i class="fa-solid fa-print text-lg"></i>
+          <span class="text-xs font-semibold">In / Xuất PDF</span>
         </button>
       </nav>
     </div>
 
     <!-- 5. DANH SÁCH THÀNH VIÊN ĐÃ ĐĂNG KÝ -->
+    <div class="print-only text-center mb-3">
+      <h2 class="text-base font-extrabold uppercase tracking-wide text-red-700">Danh sách thành viên</h2>
+    </div>
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <!-- Trạng thái Loading ban đầu -->
       <div id="loading" class="py-10 px-4 text-center text-gray-400 flex flex-col items-center justify-center gap-4">
@@ -277,7 +398,7 @@
               <th class="py-4 px-6 w-16 text-center border-r border-red-600/30"><i class="fa-solid fa-list-ol mr-1"></i> STT</th>
               <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-user mr-1"></i> Họ và tên</th>
               <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-cake-candles mr-1"></i> Năm sinh</th>
-              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-ruler-vertical mr-1"></i> Chiều cao - Cân nặng</th>
+              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-ruler-vertical mr-1"></i> <span class="no-print">Chiều cao - Cân nặng</span><span class="print-only-inline">Cao - Nặng</span></th>
               <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-venus-mars mr-1"></i> Giới tính</th>
               <th class="py-4 px-6"><i class="fa-solid fa-house-chimney mr-1"></i> Tổ dân phố</th>
             </tr>
@@ -311,7 +432,7 @@
          Ví dụ URL: https://www.youtube.com/watch?v=dQw4w9WgXcQ  ->  ID là "dQw4w9WgXcQ"
          Sau đó thay ID đó vào biến YOUTUBE_VIDEO_ID bên dưới (trong thẻ <script>),
          KHÔNG cần sửa trực tiếp trong iframe vì src sẽ được JS tự động gán. -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mt-6">
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mt-6 no-print">
       <h3 class="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-red-700 mb-4">
         <i class="fa-brands fa-youtube text-xl text-red-600"></i> Video Tập Luyện / Giới Thiệu CLB
       </h3>
@@ -347,7 +468,7 @@
           <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
           <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
           <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
-          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: fb/thuongcatdragonboat</span></p>
+          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: <a href="https://web.facebook.com/thuongcatdragonboat" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline">fb/thuongcatdragonboat</a></span></p>
         </div>
       </div>
       <div class="pt-4 text-center text-xs text-gray-500">
@@ -507,7 +628,14 @@
       if (m) weight = `${m[1]}kg`;
 
       if (!height && !weight) return str;
-      return [height, weight].filter(Boolean).join(' / ');
+
+      // Luôn hiển thị đủ 2 vế "Chiều cao / Cân nặng". Nếu thiếu 1 trong 2, hiển thị
+      // placeholder rõ ràng thay vì bỏ trống:
+      // - Thiếu chiều cao -> "---"     (vd: --- / 70kg)
+      // - Thiếu cân nặng  -> "---kg"   (vd: 1m80 / ---kg)
+      const heightPart = height || '---';
+      const weightPart = weight || '---kg';
+      return `${heightPart} / ${weightPart}`;
     }
 
     function showMembers(list) {
@@ -616,6 +744,14 @@
         }
       });
 
+      // Đếm tổng số thành viên của từng Tổ dân phố, để hiển thị ngay trên dòng tiêu đề nhóm
+      // (vd: "TỔ DÂN PHỐ THƯỢNG CÁT 1 - Tổng 18 thành viên")
+      const tdpCountMap = {};
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        tdpCountMap[key] = (tdpCountMap[key] || 0) + 1;
+      });
+
       let lastTdpKeyForStt = null;
       let sttInGroup = 0;
 
@@ -637,7 +773,7 @@
 
         // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
         if (isNewGroup) {
-          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()} - Tổng ${tdpCountMap[currentTdpKey] || 0} thành viên`;
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
