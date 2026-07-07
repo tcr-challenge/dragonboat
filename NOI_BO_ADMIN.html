@@ -118,7 +118,7 @@
     <div class="print-only text-center mb-4">
       <h1 class="text-xl font-extrabold uppercase">BẢN QUẢN LÝ NỘI BỘ CÓ HIỂN THỊ SỐ ĐIỆN THOẠI - CĂN CƯỚC CÔNG DÂN</h1>
       <p class="text-sm font-medium">LEADER SỬ DỤNG ĐỂ THÊM THÀNH VIÊN VÀO NHÓM ZALO</p>
-      <p class="text-[11px] text-gray-500" id="print-date"></p>
+      <p class="text-[11px] text-gray-500" id="print-date"> | Copyright by LangBenSong </p>
     </div>
 
     <!-- 4. TỔNG SỐ THÀNH VIÊN + NÚT IN / XUẤT PDF -->
@@ -559,7 +559,7 @@
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
           <td class="py-2 px-1.5 text-center align-top border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.tayThuan || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
           <td class="py-2 px-1.5 align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDP(item.toDanPho)}</td>
@@ -582,7 +582,7 @@
             <p><span class="text-gray-400">DOB:</span> <strong class="text-gray-800">${formatNgaySinh(item.ngaySinh)}</strong></p>
             <p><span class="text-gray-400">GT:</span> <strong class="text-gray-800">${item.gioiTinh || '---'}</strong></p>
             <p><span class="text-gray-400">Cao/Nặng:</span> <strong class="text-gray-800">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></p>
-            <p><span class="text-gray-400">Tay thuận:</span> <strong class="text-gray-800">${item.tayThuan || '---'}</strong></p>
+            <p><span class="text-gray-400">Tay thuận:</span> ${tayThuanBadge(item.tayThuan)}</p>
             <p><span class="text-gray-400">CCCD:</span> <strong class="text-gray-800">${formatCCCD(item.cccd)}</strong></p>
             <p><span class="text-gray-400">SĐT:</span> <a href="tel:${item.rawPhone}" class="font-semibold text-gray-800">${formatPhone(item.rawPhone)}</a></p>
             <p class="col-span-2"><span class="text-gray-400">TDP:</span> <strong class="text-gray-800">${formatTDP(item.toDanPho)}</strong></p>
@@ -726,6 +726,55 @@
       return str;
     }
 
+    // ===== NHẬN DIỆN NHANH "TAY THUẬN" BẰNG MÀU SẮC + ICON =====
+    // Phân loại giá trị thô trong Sheet (có thể gõ "Trái"/"trái"/"Phải"/"Cả 2 bên"/"2 tay"...)
+    // về 1 trong 3 nhóm: trai / phai / ca2. Nếu không khớp mẫu nào -> "khac" (vẫn hiển thị nguyên văn).
+    function classifyTayThuan(raw) {
+      if (!raw) return null;
+      const norm = raw.toString().trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // bỏ dấu tiếng Việt để so khớp chắc chắn hơn
+      if (!norm || norm === '---') return null;
+      const hasTrai = /\btrai\b/.test(norm);
+      const hasPhai = /\bphai\b/.test(norm);
+      const hasCa2 = /(ca\s*2|ca\s*hai|2\s*ben|2\s*tay|hai\s*tay|hai\s*ben)/.test(norm);
+      if (hasCa2 || (hasTrai && hasPhai)) return 'ca2';
+      if (hasTrai) return 'trai';
+      if (hasPhai) return 'phai';
+      return 'khac';
+    }
+
+    // Màu + icon FontAwesome dùng cho giao diện web (bảng desktop & thẻ mobile)
+    const TAY_THUAN_STYLE = {
+      trai: { icon: 'fa-hand-point-left',  label: 'Trái',     badgeClass: 'bg-blue-100 text-blue-700 border border-blue-300' },
+      phai: { icon: 'fa-hand-point-right', label: 'Phải',     badgeClass: 'bg-emerald-100 text-emerald-700 border border-emerald-300' },
+      ca2:  { icon: 'fa-hands',            label: 'Cả 2 bên', badgeClass: 'bg-amber-100 text-amber-700 border border-amber-300' },
+      khac: { icon: 'fa-circle-question',  label: null,       badgeClass: 'bg-gray-100 text-gray-600 border border-gray-300' }
+    };
+
+    // Trả về HTML "viên thuốc" (pill) màu + icon cho cột Tay thuận
+    function tayThuanBadge(raw) {
+      const type = classifyTayThuan(raw);
+      if (!type) return '<span class="text-gray-400">---</span>';
+      const cfg = TAY_THUAN_STYLE[type];
+      const label = cfg.label || raw.toString().trim();
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}"><i class="fa-solid ${cfg.icon}"></i>${label}</span>`;
+    }
+
+    // Màu (mã hex, không dấu #) + nhãn có ký hiệu mũi tên dùng khi xuất Excel
+    const TAY_THUAN_EXCEL_STYLE = {
+      trai: { fill: 'DBEAFE', font: '1D4ED8', label: '◀ Trái' },
+      phai: { fill: 'D1FAE5', font: '047857', label: 'Phải ▶' },
+      ca2:  { fill: 'FEF3C7', font: 'B45309', label: '⇄ Cả 2 bên' },
+      khac: { fill: 'F3F4F6', font: '4B5563', label: null }
+    };
+
+    function formatTayThuanExcelLabel(raw) {
+      const type = classifyTayThuan(raw);
+      if (!type) return '---';
+      const cfg = TAY_THUAN_EXCEL_STYLE[type];
+      return cfg.label || raw.toString().trim();
+    }
+
     function filterMembers() {
       const keyword = document.getElementById('search-input').value.trim().toLowerCase();
       const removeSign = (str) => {
@@ -772,6 +821,20 @@
       return [number, date].filter(Boolean).join('\n');
     }
 
+    // Tách riêng "số CCCD" và "ngày cấp" (dùng để xuất thành 2 cột riêng trong Excel,
+    // giúp có thể bôi đậm đúng số CCCD mà không ảnh hưởng tới ngày cấp).
+    function getCCCDParts(raw) {
+      if (!raw) return { number: '', date: '' };
+      const str = raw.toString().trim();
+      if (!str || str === '---') return { number: '', date: '' };
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      return { number, date };
+    }
+
     // Bảng màu nền (mã HEX) theo từng Tổ dân phố — tương ứng với bgColorsTable dùng trên web,
     // giúp file Excel vẫn phân biệt trực quan từng tổ dù đã bỏ dòng tiêu đề phân tách.
     const tdpColorHexTable = [
@@ -789,10 +852,10 @@
 
     const EXCEL_HEADERS = [
       'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Tay thuận',
-      'CCCD', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
+      'Số CCCD', 'Ngày cấp', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
     ];
-    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 13 cột -> cột cuối là "M"
-    const EXCEL_LAST_COL_LETTER = 'M';
+    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 14 cột -> cột cuối là "N"
+    const EXCEL_LAST_COL_LETTER = 'N';
 
     function thinBorder(colorHex) {
       const side = { style: 'thin', color: { rgb: colorHex } };
@@ -830,21 +893,25 @@
       const titleRow2 = ['DANH SÁCH THÀNH VIÊN'];
       const dateRow = ['Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '   |   Tổng số: ' + list.length + ' thành viên   |   Copyright by LangBenSong '];
 
-      const dataRows = list.map((item, idx) => ([
-        idx + 1, // STT chạy liên tục từ đầu tới cuối
-        displayNamePlain(item),
-        formatNgaySinh(item.ngaySinh),
-        item.gioiTinh || '---',
-        formatChieuCaoCanNang(item.chieuCaoCanNang),
-        item.tayThuan || '---',
-        formatCCCDPlain(item.cccd),
-        formatPhone(item.rawPhone),
-        formatTDP(item.toDanPho),
-        item.diaChi || '---',
-        item.kinhNghiem || '---',
-        item.congViec || '---',
-        item.camKet ? 'Cam kết' : '---'
-      ]));
+      const dataRows = list.map((item, idx) => {
+        const cccdParts = getCCCDParts(item.cccd);
+        return [
+          idx + 1, // STT chạy liên tục từ đầu tới cuối
+          displayNamePlain(item),
+          formatNgaySinh(item.ngaySinh),
+          item.gioiTinh || '---',
+          formatChieuCaoCanNang(item.chieuCaoCanNang),
+          formatTayThuanExcelLabel(item.tayThuan),
+          cccdParts.number || '---',
+          cccdParts.date || '---',
+          formatPhone(item.rawPhone),
+          formatTDP(item.toDanPho),
+          item.diaChi || '---',
+          item.kinhNghiem || '---',
+          item.congViec || '---',
+          item.camKet ? 'Cam kết' : '---'
+        ];
+      });
 
       const HEADER_ROW_INDEX = 3; // sau 3 dòng tiêu đề (0,1,2) -> header ở dòng 4 (index 3)
       const DATA_START_INDEX = HEADER_ROW_INDEX + 1;
@@ -862,7 +929,7 @@
       // ---- Độ rộng từng cột: nới rộng hơn hẳn so với bản trước, đặc biệt các cột
       // chứa thông tin dài (Họ và tên, Địa chỉ, Kinh nghiệm, Công việc, CCCD, TDP)
       // để chữ không bị dồn/lấp và dễ đọc hơn.
-      const COL_WCH = [8, 26, 13, 10, 13, 11, 20, 16, 20, 34, 28, 28, 12];
+      const COL_WCH = [8, 26, 13, 10, 13, 11, 14, 12, 16, 20, 34, 28, 28, 12];
       ws['!cols'] = COL_WCH.map(wch => ({ wch }));
 
       // ---- Chiều cao dòng: tính ĐỘNG theo độ dài nội dung từng dòng, đảm bảo đủ chỗ
@@ -879,7 +946,7 @@
         }, 0);
       }
 
-      const WRAP_COLS = [1, 6, 8, 9, 10, 11]; // Họ và tên, CCCD, TDP, Địa chỉ, Kinh nghiệm, Công việc
+      const WRAP_COLS = [1, 9, 10, 11, 12]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc
       const LINE_HEIGHT_PT = 15;   // chiều cao 1 dòng chữ (pt), tương ứng cỡ chữ ~10.5
       const ROW_PADDING_PT = 8;    // đệm trên dưới cho thoáng, dễ nhìn
       const MIN_DATA_ROW_HPT = 26; // chiều cao tối thiểu mỗi dòng dữ liệu (rộng rãi hơn bản cũ)
@@ -913,7 +980,7 @@
       ws['!freeze'] = { xSplit: 0, ySplit: HEADER_ROW_INDEX + 1 };
       ws['!sheetViews'] = [{ state: 'frozen', xSplit: 0, ySplit: HEADER_ROW_INDEX + 1, topLeftCell: `A${HEADER_ROW_INDEX + 2}` }];
 
-      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 12]); // STT, DOB, GT, Cao/Nặng, Tay thuận, CCCD, SĐT, Cam kết
+      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 13]); // STT, DOB, GT, Cao/Nặng, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết
 
       // ---- Style dòng tiêu đề CLB (dòng 1-2) ----
       ['A1', 'A2'].forEach((addr, i) => {
@@ -953,9 +1020,33 @@
         for (let c = 0; c < EXCEL_COL_COUNT; c++) {
           const addr = XLSX.utils.encode_cell({ r: rowIndexInSheet, c });
           if (!ws[addr]) continue;
+
+          // Mặc định: tô theo màu Tổ dân phố như cũ
+          let cellFill = colorHex;
+          let cellFontColor = '1F2937';
+          let cellBold = c === 1;
+
+          // Riêng cột "Số CCCD" (c === 6): in đậm để dễ nhìn. Vì đã tách riêng khỏi
+          // cột "Ngày cấp" (c === 7), việc đậm ở đây không ảnh hưởng tới ngày cấp.
+          if (c === 6) {
+            cellBold = true;
+          }
+
+          // Riêng cột "Tay thuận" (c === 5): tô màu + in đậm riêng theo Trái/Phải/Cả 2 bên
+          // để nhìn vào là biết ngay, không lẫn với màu Tổ dân phố của cả hàng.
+          if (c === 5) {
+            const type = classifyTayThuan(item.tayThuan);
+            if (type) {
+              const styleCfg = TAY_THUAN_EXCEL_STYLE[type];
+              cellFill = styleCfg.fill;
+              cellFontColor = styleCfg.font;
+              cellBold = true;
+            }
+          }
+
           ws[addr].s = {
-            font: { color: { rgb: '1F2937' }, sz: 10.5, name: 'Calibri', bold: c === 1 },
-            fill: { fgColor: { rgb: colorHex } },
+            font: { color: { rgb: cellFontColor }, sz: 10.5, name: 'Calibri', bold: cellBold },
+            fill: { fgColor: { rgb: cellFill } },
             alignment: {
               horizontal: CENTER_COLS.has(c) ? 'center' : 'left',
               vertical: 'center',
