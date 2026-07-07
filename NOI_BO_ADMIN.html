@@ -134,10 +134,10 @@
         </div>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
+        <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
           <i class="fa-solid fa-file-excel"></i> Xuất Excel
         </button>
-        <button onclick="window.print()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors">
+        <button onclick="window.print()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
           <i class="fa-solid fa-file-pdf"></i> In / Xuất PDF
         </button>
       </div>
@@ -280,11 +280,11 @@
           <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
           <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
           <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
-          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: fb/thuongcatdragonboat</span></p>
+          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: <a href="https://web.facebook.com/thuongcatdragonboat" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer">fb/thuongcatdragonboat</a></span></p>
         </div>
       </div>
       <div class="pt-4 text-center text-xs text-gray-500">
-        <p>&copy; 2026 Copyright by LangBenSong. All rights reserved.</p>
+        <p>&copy; 2026 Copyright by <a href="https://web.facebook.com/thuongcatbactuliemhanoi/" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white hover:underline cursor-pointer">LangBenSong</a>. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -362,8 +362,42 @@
     // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
     const CACHE_KEY = 'clb_members_internal_cache_v1';
 
+    // ----- LỌC TRÙNG THÀNH VIÊN THEO SỐ CCCD (giữ lần đăng ký CUỐI CÙNG) -----
+    // Khi thành viên đăng ký lại (form mới) để bổ sung/cập nhật thông tin còn thiếu,
+    // dữ liệu mới sẽ được thêm vào CUỐI danh sách gốc (đúng thứ tự các lượt trả lời form).
+    // Nếu 2 (hay nhiều) lượt đăng ký có cùng số CCCD, ta chỉ giữ lại lượt đăng ký
+    // CUỐI CÙNG (mới nhất, đầy đủ nhất) và bỏ qua các lượt trùng trước đó.
+    // Những thành viên chưa có/không có CCCD thì KHÔNG bị coi là trùng nhau.
+    function extractCCCDNumber(raw) {
+      if (!raw) return '';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '';
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      return number || '';
+    }
+
+    function dedupeByLatestCCCD(list) {
+      // Bước 1: với mỗi số CCCD, tìm vị trí (index) xuất hiện CUỐI CÙNG trong danh sách gốc
+      const lastIndexByCCCD = new Map();
+      list.forEach((item, idx) => {
+        const num = extractCCCDNumber(item.cccd);
+        if (num) lastIndexByCCCD.set(num, idx);
+      });
+      // Bước 2: chỉ giữ lại phần tử nào là lượt xuất hiện cuối cùng của CCCD đó
+      // (thành viên không có CCCD luôn được giữ lại, vì không có cơ sở để xác định trùng)
+      return list.filter((item, idx) => {
+        const num = extractCCCDNumber(item.cccd);
+        if (!num) return true;
+        return lastIndexByCCCD.get(num) === idx;
+      });
+    }
+
     function showMembers(list) {
-      allMembers = list;
+      allMembers = dedupeByLatestCCCD(list);
       document.getElementById('total-count').innerText = allMembers.length;
       document.getElementById('loading').classList.add('hidden');
       document.getElementById('table-container-desktop').style.display = '';
@@ -470,6 +504,14 @@
         }
       });
 
+      // Đếm tổng số thành viên của từng Tổ dân phố, để hiển thị ngay trên dòng tiêu đề nhóm
+      // (vd: "TỔ DÂN PHỐ THƯỢNG CÁT 2 (8 thành viên)")
+      const tdpCountMap = {};
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        tdpCountMap[key] = (tdpCountMap[key] || 0) + 1;
+      });
+
       let lastTdpKeyForStt = null;
       let sttInGroup = 0;
 
@@ -491,7 +533,8 @@
 
         // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
         if (isNewGroup) {
-          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+          const groupCount = tdpCountMap[currentTdpKey] || 0;
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()} (${groupCount} thành viên)`;
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
@@ -624,7 +667,14 @@
       if (m) weight = `${m[1]}kg`;
 
       if (!height && !weight) return str; // Không nhận diện được gì thì giữ nguyên chuỗi gốc
-      return [height, weight].filter(Boolean).join(' / ');
+
+      // Luôn hiển thị đủ 2 vế "Chiều cao / Cân nặng". Nếu thiếu 1 trong 2, hiển thị
+      // placeholder rõ ràng thay vì bỏ trống, tránh gây hiểu lầm là thiếu dữ liệu:
+      // - Thiếu chiều cao -> "---"       (vd: --- / 90kg)
+      // - Thiếu cân nặng  -> "---kg"     (vd: 1m76 / ---kg)
+      const heightPart = height || '---';
+      const weightPart = weight || '---kg';
+      return `${heightPart} / ${weightPart}`;
     }
 
 
@@ -774,8 +824,10 @@
       });
 
       // ---- Xây dữ liệu dạng mảng 2 chiều (AOA) ----
-      const titleRow1 = ['CÂU LẠC BỘ THUYỀN RỒNG - ĐÌNH THƯỢNG CÁT'];
-      const titleRow2 = ['DANH SÁCH THÀNH VIÊN ĐĂNG KÝ'];
+      // Tiêu đề viết hoa chữ cái đầu (không viết hoa toàn bộ), độ nổi bật đến từ
+      // cỡ chữ lớn + nền đỏ đậm + chữ trắng đậm thay vì "hét" bằng chữ hoa toàn bộ.
+      const titleRow1 = ['Câu lạc bộ Thuyền Rồng - Đình Thượng Cát'];
+      const titleRow2 = ['Danh sách thành viên đăng ký'];
       const dateRow = ['Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '   |   Tổng số: ' + list.length + ' thành viên'];
 
       const dataRows = list.map((item, idx) => ([
@@ -807,30 +859,49 @@
         { s: { r: 2, c: 0 }, e: { r: 2, c: EXCEL_COL_COUNT - 1 } }
       ];
 
-      // ---- Độ rộng từng cột (tương ứng tỉ lệ % trên web) ----
-      ws['!cols'] = [
-        { wch: 6 },  // STT
-        { wch: 24 }, // Họ và tên
-        { wch: 12 }, // Ngày sinh
-        { wch: 9 },  // Giới tính
-        { wch: 12 }, // Cao/Nặng
-        { wch: 10 }, // Tay thuận
-        { wch: 16 }, // CCCD
-        { wch: 14 }, // SĐT
-        { wch: 18 }, // TDP
-        { wch: 26 }, // Địa chỉ
-        { wch: 24 }, // Kinh nghiệm
-        { wch: 24 }, // Công việc
-        { wch: 11 }  // Cam kết
-      ];
+      // ---- Độ rộng từng cột: nới rộng hơn hẳn so với bản trước, đặc biệt các cột
+      // chứa thông tin dài (Họ và tên, Địa chỉ, Kinh nghiệm, Công việc, CCCD, TDP)
+      // để chữ không bị dồn/lấp và dễ đọc hơn.
+      const COL_WCH = [8, 26, 13, 10, 13, 11, 20, 16, 20, 34, 28, 28, 12];
+      ws['!cols'] = COL_WCH.map(wch => ({ wch }));
 
-      // ---- Chiều cao dòng ----
-      ws['!rows'] = aoa.map((_, r) => {
-        if (r === 0) return { hpt: 26 };
-        if (r === 1) return { hpt: 20 };
-        if (r === 2) return { hpt: 16 };
-        if (r === HEADER_ROW_INDEX) return { hpt: 24 };
-        return { hpt: 20 };
+      // ---- Chiều cao dòng: tính ĐỘNG theo độ dài nội dung từng dòng, đảm bảo đủ chỗ
+      // hiển thị TOÀN BỘ chữ khi bật wrapText (không bị cắt/lấp chữ), thay vì đặt cố định.
+      // Số ký tự vừa 1 dòng trong 1 cột ước lượng ~ (độ rộng cột wch) ký tự Excel dùng font Calibri.
+      function estimateWrappedLines(text, wch) {
+        if (!text && text !== 0) return 1;
+        const str = text.toString();
+        if (!str) return 1;
+        const usableChars = Math.max(4, wch - 2); // trừ hao phần đệm 2 bên ô
+        // Tôn trọng cả các dòng đã xuống dòng sẵn (vd CCCD có "\n" giữa số và ngày cấp)
+        return str.split('\n').reduce((total, segment) => {
+          return total + Math.max(1, Math.ceil(segment.length / usableChars));
+        }, 0);
+      }
+
+      const WRAP_COLS = [1, 6, 8, 9, 10, 11]; // Họ và tên, CCCD, TDP, Địa chỉ, Kinh nghiệm, Công việc
+      const LINE_HEIGHT_PT = 15;   // chiều cao 1 dòng chữ (pt), tương ứng cỡ chữ ~10.5
+      const ROW_PADDING_PT = 8;    // đệm trên dưới cho thoáng, dễ nhìn
+      const MIN_DATA_ROW_HPT = 26; // chiều cao tối thiểu mỗi dòng dữ liệu (rộng rãi hơn bản cũ)
+      const MAX_DATA_ROW_HPT = 220; // chặn trần để tránh 1 dòng lỗi dữ liệu kéo quá cao
+
+      ws['!rows'] = [];
+      ws['!rows'][0] = { hpt: 30 };
+      ws['!rows'][1] = { hpt: 22 };
+      ws['!rows'][2] = { hpt: 18 };
+      ws['!rows'][HEADER_ROW_INDEX] = { hpt: 30 };
+
+      dataRows.forEach((rowValues, idx) => {
+        let maxLines = 1;
+        WRAP_COLS.forEach(c => {
+          const lines = estimateWrappedLines(rowValues[c], COL_WCH[c]);
+          if (lines > maxLines) maxLines = lines;
+        });
+        const computedHeight = Math.min(
+          MAX_DATA_ROW_HPT,
+          Math.max(MIN_DATA_ROW_HPT, maxLines * LINE_HEIGHT_PT + ROW_PADDING_PT)
+        );
+        ws['!rows'][DATA_START_INDEX + idx] = { hpt: computedHeight };
       });
 
       // ---- Bật bộ lọc tự động ngay trên dòng tiêu đề cột ----
