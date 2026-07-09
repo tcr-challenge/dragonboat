@@ -45,9 +45,50 @@
       #table-container-desktop { display: block !important; overflow: visible !important; }
       #cards-header, #cards-container { display: none !important; }
       main { max-width: 100% !important; padding: 0 !important; }
-      table { font-size: 10px; width: 100%; table-layout: fixed; }
-      th, td { padding: 4px 6px !important; word-wrap: break-word; overflow-wrap: break-word; }
+      table { font-size: 8.5px; width: 100%; table-layout: fixed; border-collapse: collapse; }
+      th, td {
+        padding: 3px 4px !important;
+        line-height: 1.25 !important;
+        /* Bắt buộc chữ tự xuống dòng trong ô thay vì tràn ra ngoài (khắc phục lỗi
+           CCCD/SĐT/Họ tên bị dính chữ, tràn cột khi in) */
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+      }
+      /* Badge "Tay thuận" khi in: vẫn giữ gọn trên 1 dòng nhưng không đẩy tràn cột */
+      td .inline-flex { white-space: normal !important; }
       .rounded-2xl, .shadow-sm, .shadow-lg { box-shadow: none !important; border-radius: 0 !important; }
+
+      /* Mở rộng gấp đôi các cột thông tin định danh chính (STT, Họ và tên, Ngày sinh)
+         so với bản xem trên web, nén bớt các cột còn lại cho vừa 1 trang giấy */
+      #table-container-desktop table th:nth-child(1),
+      #table-container-desktop table td:nth-child(1)  { width: 8%  !important; } /* STT */
+      #table-container-desktop table th:nth-child(2),
+      #table-container-desktop table td:nth-child(2)  { width: 28% !important; } /* Họ và tên */
+      #table-container-desktop table th:nth-child(3),
+      #table-container-desktop table td:nth-child(3)  { width: 14% !important; } /* Ngày sinh */
+      #table-container-desktop table th:nth-child(4),
+      #table-container-desktop table td:nth-child(4)  { width: 3%  !important; } /* GT */
+      #table-container-desktop table th:nth-child(5),
+      #table-container-desktop table td:nth-child(5)  { width: 5%  !important; } /* Cao/Nặng */
+      #table-container-desktop table th:nth-child(6),
+      #table-container-desktop table td:nth-child(6)  { width: 4%  !important; } /* Tay thuận */
+      #table-container-desktop table th:nth-child(7),
+      #table-container-desktop table td:nth-child(7)  { width: 7%  !important; } /* CCCD */
+      #table-container-desktop table th:nth-child(8),
+      #table-container-desktop table td:nth-child(8)  { width: 6%  !important; } /* SĐT */
+      #table-container-desktop table th:nth-child(9),
+      #table-container-desktop table td:nth-child(9)  { width: 4%  !important; } /* TDP */
+      #table-container-desktop table th:nth-child(10),
+      #table-container-desktop table td:nth-child(10) { width: 5%  !important; } /* Địa chỉ */
+      #table-container-desktop table th:nth-child(11),
+      #table-container-desktop table td:nth-child(11) { width: 6%  !important; } /* Kinh nghiệm */
+      #table-container-desktop table th:nth-child(12),
+      #table-container-desktop table td:nth-child(12) { width: 6%  !important; } /* Công việc */
+      #table-container-desktop table th:nth-child(13),
+      #table-container-desktop table td:nth-child(13) { width: 4%  !important; } /* Cam kết */
     }
     .print-only { display: none; }
     @media print { .print-only { display: block !important; } }
@@ -84,6 +125,23 @@
       0%, 100% { opacity: 1; }
       50%      { opacity: 0.6; }
     }
+
+    /* ===== PHIÊN BẢN LOGO HEADER: Y NGUYÊN THUYỀN RỒNG + SÓNG NƯỚC CỦA MÀN LOADING,
+       chỉ phóng to hơn (x1.5) để nhìn rõ chi tiết con thuyền và sóng ngay trên banner ===== */
+    .boat-header-scene { position: relative; width: 330px; height: 138px; margin: 0 auto; }
+    .boat-header-boat { position: absolute; left: 0; top: 0; width: 330px; height: 105px; z-index: 2; }
+    .boat-header-wave-wrap { position: absolute; left: 0; bottom: 0; width: 330px; height: 51px; overflow: hidden; z-index: 1; }
+    .boat-header-wave-svg { position: absolute; top: 0; left: 0; height: 51px; width: 660px; }
+    .boat-header-wave-back { animation: waveScrollHeaderAnim 3.2s linear infinite; opacity: 0.55; }
+    .boat-header-wave-front { animation: waveScrollHeaderAnim 1.8s linear infinite reverse; opacity: 0.9; }
+    @keyframes waveScrollHeaderAnim {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-330px); }
+    }
+    /* Màn hình rất nhỏ (< 380px): thu nhỏ lại logo header để không bị tràn ngang */
+    @media (max-width: 380px) {
+      .boat-header-scene { transform: scale(0.78); transform-origin: center top; margin-bottom: -28px; }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
@@ -96,8 +154,49 @@
            A) Đổi LOGO tròn: xoá thẻ <i class="fa-solid fa-ship..."></i> bên dưới,
               thay bằng: <img src="ĐƯỜNG_DẪN_ẢNH_LOGO_CỦA_ANH.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover">
            B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
-      <div class="inline-block p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
-        <i class="fa-solid fa-ship text-3xl md:text-4xl text-amber-400"></i>
+      <div class="inline-block mb-3">
+        <div class="boat-header-scene">
+          <!-- Sóng nước (2 lớp, chạy ngược chiều nhau) — giống hệt màn Loading, chỉ phóng to -->
+          <div class="boat-header-wave-wrap">
+            <svg class="boat-header-wave-svg boat-header-wave-back" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,20 Q13.75,10 27.5,20 T55,20 T82.5,20 T110,20 T137.5,20 T165,20 T192.5,20 T220,20 T247.5,20 T275,20 T302.5,20 T330,20 T357.5,20 T385,20 T412.5,20 T440,20 V34 H0 Z" fill="#2563eb"/>
+            </svg>
+            <svg class="boat-header-wave-svg boat-header-wave-front" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,22 Q13.75,14 27.5,22 T55,22 T82.5,22 T110,22 T137.5,22 T165,22 T192.5,22 T220,22 T247.5,22 T275,22 T302.5,22 T330,22 T357.5,22 T385,22 T412.5,22 T440,22 V34 H0 Z" fill="#1d4ed8"/>
+            </svg>
+          </div>
+
+          <!-- Thuyền rồng + các tay chèo — giống hệt màn Loading, chỉ phóng to -->
+          <svg class="boat-header-boat" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="boat-bob-group">
+              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="1.5"/>
+              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+              <circle cx="9" cy="35" r="1.6" fill="#fde047"/>
+              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#dc2626"/>
+              <g>
+                <circle cx="55" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="50" y="38" width="10" height="10" rx="3" fill="#f59e0b"/>
+                <line x1="59" y1="40" x2="74" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-1"/>
+              </g>
+              <g>
+                <circle cx="90" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="85" y="38" width="10" height="10" rx="3" fill="#059669"/>
+                <line x1="94" y1="40" x2="109" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-2"/>
+              </g>
+              <g>
+                <circle cx="125" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="120" y="38" width="10" height="10" rx="3" fill="#2563eb"/>
+                <line x1="129" y1="40" x2="144" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-3"/>
+              </g>
+              <g>
+                <circle cx="160" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="155" y="38" width="10" height="10" rx="3" fill="#fbbf24"/>
+                <line x1="164" y1="40" x2="179" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
       </div>
       <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
         CÂU LẠC BỘ THUYỀN RỒNG
@@ -118,7 +217,7 @@
     <div class="print-only text-center mb-4">
       <h1 class="text-xl font-extrabold uppercase">BẢN QUẢN LÝ NỘI BỘ CÓ HIỂN THỊ SỐ ĐIỆN THOẠI - CĂN CƯỚC CÔNG DÂN</h1>
       <p class="text-sm font-medium">LEADER SỬ DỤNG ĐỂ THÊM THÀNH VIÊN VÀO NHÓM ZALO</p>
-      <p class="text-[11px] text-gray-500" id="print-date"> | Copyright by LangBenSong </p>
+      <p class="text-[11px] text-gray-500" id="print-date"></p>
     </div>
 
     <!-- 4. TỔNG SỐ THÀNH VIÊN + NÚT IN / XUẤT PDF -->
@@ -232,7 +331,7 @@
               <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
               <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
-              <th class="py-3 px-1.5 w-[6%] text-left border-r border-red-600/30">TDP</th>
+              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">TDP</th>
               <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Địa chỉ</th>
               <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Kinh nghiệm</th>
               <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Công việc</th>
@@ -505,11 +604,17 @@
       });
 
       // Đếm tổng số thành viên của từng Tổ dân phố, để hiển thị ngay trên dòng tiêu đề nhóm
-      // (vd: "TỔ DÂN PHỐ THƯỢNG CÁT 2 (8 thành viên)")
+      // (vd: "TỔ DÂN PHỐ THƯỢNG CÁT 2" — "Thành viên: 20 | Nam: 16 - Nữ: 4")
       const tdpCountMap = {};
+      const tdpGenderCountMap = {}; // { [tdpKey]: { nam: number, nu: number } }
       list.forEach((item) => {
         const key = item.toDanPho || 'Trống';
         tdpCountMap[key] = (tdpCountMap[key] || 0) + 1;
+
+        if (!tdpGenderCountMap[key]) tdpGenderCountMap[key] = { nam: 0, nu: 0 };
+        const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+        if (g === 'nam') tdpGenderCountMap[key].nam++;
+        else if (g === 'nữ' || g === 'nu') tdpGenderCountMap[key].nu++;
       });
 
       let lastTdpKeyForStt = null;
@@ -531,22 +636,35 @@
         sttInGroup++;
         const displayStt = sttInGroup;
 
-        // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, vd "TỔ DÂN PHỐ THƯỢNG CÁT 1"
+        // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, gồm 2 dòng:
+        // Dòng 1: "TỔ DÂN PHỐ THƯỢNG CÁT 2"
+        // Dòng 2: "Thành viên: 20  |  Nam: 16  -  Nữ: 4"
         if (isNewGroup) {
           const groupCount = tdpCountMap[currentTdpKey] || 0;
-          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()} (${groupCount} thành viên)`;
+          const genderCount = tdpGenderCountMap[currentTdpKey] || { nam: 0, nu: 0 };
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+          const groupStatsLine = `Thành viên: ${groupCount}&nbsp;&nbsp;|&nbsp;&nbsp;Nam: ${genderCount.nam}&nbsp;&nbsp;-&nbsp;&nbsp;Nữ: ${genderCount.nu}`;
+          const groupHeaderHtml = `
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-house-chimney text-base md:text-lg"></i>
+              <span class="text-base md:text-lg">${groupTitle}</span>
+            </div>
+            <div class="pl-6 mt-0.5 font-semibold normal-case tracking-normal text-red-100 text-xs md:text-sm">
+              ${groupStatsLine}
+            </div>
+          `;
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
-            <td colspan="13" class="py-2 px-3 bg-red-700 text-white font-bold text-xs tracking-wide">
-              <i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}
+            <td colspan="13" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
+              ${groupHeaderHtml}
             </td>
           `;
           tbody.appendChild(trGroup);
 
           const cardGroup = document.createElement('div');
-          cardGroup.className = 'py-2 px-4 bg-red-700 text-white font-bold text-sm tracking-wide';
-          cardGroup.innerHTML = `<i class="fa-solid fa-house-chimney mr-2"></i>${groupTitle}`;
+          cardGroup.className = 'py-2.5 px-4 bg-red-700 text-white font-bold tracking-wide';
+          cardGroup.innerHTML = groupHeaderHtml;
           cardsContainer.appendChild(cardGroup);
         }
 
@@ -562,10 +680,10 @@
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
-          <td class="py-2 px-1.5 align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDP(item.toDanPho)}</td>
-          <td class="py-2 px-1.5 align-top text-gray-700 border-r border-gray-100/50 break-words">${item.diaChi || '---'}</td>
-          <td class="py-2 px-1.5 align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
-          <td class="py-2 px-1.5 align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDPShort(item.toDanPho)}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.diaChi || '---'}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top text-gray-700">${item.camKet ? 'Cam kết' : '---'}</td>
         `;
         tbody.appendChild(tr);
@@ -585,7 +703,7 @@
             <p><span class="text-gray-400">Tay thuận:</span> ${tayThuanBadge(item.tayThuan)}</p>
             <p><span class="text-gray-400">CCCD:</span> <strong class="text-gray-800">${formatCCCD(item.cccd)}</strong></p>
             <p><span class="text-gray-400">SĐT:</span> <a href="tel:${item.rawPhone}" class="font-semibold text-gray-800">${formatPhone(item.rawPhone)}</a></p>
-            <p class="col-span-2"><span class="text-gray-400">TDP:</span> <strong class="text-gray-800">${formatTDP(item.toDanPho)}</strong></p>
+            <p class="col-span-2"><span class="text-gray-400">TDP:</span> <strong class="text-gray-800">${formatTDPShort(item.toDanPho)}</strong></p>
             <p class="col-span-2"><span class="text-gray-400">Địa chỉ:</span> <strong class="text-gray-800">${item.diaChi || '---'}</strong></p>
             <p class="col-span-2"><span class="text-gray-400">Kinh nghiệm:</span> ${item.kinhNghiem || '---'}</p>
             <p class="col-span-2"><span class="text-gray-400">Công việc:</span> ${item.congViec || '---'}</p>
@@ -608,9 +726,19 @@
         ? '<i class="fa-solid fa-shield-halved text-amber-500 ml-1.5" title="Leader CLB"></i>'
         : '';
     }
-    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên
+    // Chuẩn hóa tên về kiểu "Chữ Hoa Đầu Từ, còn lại chữ thường" (Title Case tiếng Việt),
+    // áp dụng cho tất cả thành viên KHÔNG phải Leader — để không bị lệ thuộc vào cách
+    // Leader tuyển quân gõ tên trong Google Sheet (viết hoa hết, viết thường hết, lẫn lộn...).
+    // Ví dụ: "NGUYỄN THỊ THÚY" -> "Nguyễn Thị Thúy" ; "nguyễn văn Long" -> "Nguyễn Văn Long"
+    function toVietnameseTitleCase(raw) {
+      if (!raw) return raw;
+      return raw.toString().trim().toLowerCase()
+        .replace(/([^\s-]+)/g, (word) => word.charAt(0).toUpperCase() + word.slice(1));
+    }
+    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên,
+    // còn lại (thành viên thường) luôn chuẩn hóa về kiểu Title Case cho đồng nhất
     function displayName(item) {
-      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : toVietnameseTitleCase(item.hoTen);
       return `${name}${leaderBadge(item)}`;
     }
 
@@ -697,6 +825,18 @@
       if (!str || str === '---') return '---';
       const cleaned = str.replace(/^(TDP|Tổ\s*dân\s*phố)[\s.:\-]*/i, '').trim();
       return cleaned || str;
+    }
+
+    // Rút gọn thêm 1 bước nữa cho GỌN Ở CỘT "TDP" trong bảng (không dùng cho dòng tiêu đề
+    // nhóm to — dòng đó vẫn hiện đầy đủ): viết tắt từ đầu tiên thành 1 chữ cái + dấu chấm,
+    // dính liền từ tiếp theo. Vd: "Thượng Cát 1" -> "T.Cát 1"
+    function formatTDPShort(raw) {
+      const cleaned = formatTDP(raw);
+      if (!cleaned || cleaned === '---') return cleaned;
+      const words = cleaned.split(/\s+/);
+      if (words.length <= 1) return cleaned;
+      const abbrev = words[0].charAt(0).toUpperCase() + '.';
+      return `${abbrev}${words.slice(1).join(' ')}`;
     }
 
     // Chuyển ngày sinh về đúng định dạng "ngày/tháng/năm" (vd: 26/6/1995), bất kể dữ liệu
@@ -803,7 +943,7 @@
 
     // Tên hiển thị dạng CHỮ THƯỜNG (không icon) cho Excel — Leader được đánh dấu bằng ★
     function displayNamePlain(item) {
-      const name = isLeader(item) ? item.hoTen.toUpperCase() : item.hoTen;
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : toVietnameseTitleCase(item.hoTen);
       return isLeader(item) ? `★ ${name}` : name;
     }
 
