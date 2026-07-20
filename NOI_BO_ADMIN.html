@@ -61,34 +61,38 @@
       td .inline-flex { white-space: normal !important; }
       .rounded-2xl, .shadow-sm, .shadow-lg { box-shadow: none !important; border-radius: 0 !important; }
 
-      /* Mở rộng gấp đôi các cột thông tin định danh chính (STT, Họ và tên, Ngày sinh)
-         so với bản xem trên web, nén bớt các cột còn lại cho vừa 1 trang giấy */
+      /* Độ rộng từng cột khi in được tính theo ĐỘ DÀI NỘI DUNG THỰC TẾ của từng trường
+         (không còn ưu tiên phóng to Họ và tên/Ngày sinh như trước), để không cột nào
+         bị quá hẹp (chữ dồn/tràn dòng) hay quá rộng (thừa khoảng trắng vô ích).
+         Tổng cộng đúng 100% chiều rộng khổ giấy ngang (landscape) để vừa đúng 1 trang. */
       #table-container-desktop table th:nth-child(1),
-      #table-container-desktop table td:nth-child(1)  { width: 8%  !important; } /* STT */
+      #table-container-desktop table td:nth-child(1)  { width: 3%  !important; } /* STT: 1-3 chữ số */
       #table-container-desktop table th:nth-child(2),
-      #table-container-desktop table td:nth-child(2)  { width: 28% !important; } /* Họ và tên */
+      #table-container-desktop table td:nth-child(2)  { width: 17% !important; } /* Họ và tên: cột dài nhất, cần rộng nhất */
       #table-container-desktop table th:nth-child(3),
-      #table-container-desktop table td:nth-child(3)  { width: 14% !important; } /* Ngày sinh */
+      #table-container-desktop table td:nth-child(3)  { width: 7%  !important; } /* Ngày sinh: dd/mm/yyyy */
       #table-container-desktop table th:nth-child(4),
-      #table-container-desktop table td:nth-child(4)  { width: 3%  !important; } /* GT */
+      #table-container-desktop table td:nth-child(4)  { width: 3%  !important; } /* GT: Nam/Nữ */
       #table-container-desktop table th:nth-child(5),
-      #table-container-desktop table td:nth-child(5)  { width: 5%  !important; } /* Cao/Nặng */
+      #table-container-desktop table td:nth-child(5)  { width: 7%  !important; } /* Cao/Nặng: vd 1m70 / 70kg */
       #table-container-desktop table th:nth-child(6),
-      #table-container-desktop table td:nth-child(6)  { width: 4%  !important; } /* Tay thuận */
+      #table-container-desktop table td:nth-child(6)  { width: 4%  !important; } /* Size áo: S/M/L/XL */
       #table-container-desktop table th:nth-child(7),
-      #table-container-desktop table td:nth-child(7)  { width: 7%  !important; } /* CCCD */
+      #table-container-desktop table td:nth-child(7)  { width: 6%  !important; } /* Tay thuận: Trái/Phải/Cả 2 bên */
       #table-container-desktop table th:nth-child(8),
-      #table-container-desktop table td:nth-child(8)  { width: 6%  !important; } /* SĐT */
+      #table-container-desktop table td:nth-child(8)  { width: 10% !important; } /* CCCD: số 12 chữ số + ngày cấp (2 dòng) */
       #table-container-desktop table th:nth-child(9),
-      #table-container-desktop table td:nth-child(9)  { width: 4%  !important; } /* TDP */
+      #table-container-desktop table td:nth-child(9)  { width: 7%  !important; } /* SĐT: 10 số dạng nhóm 4-3-3 */
       #table-container-desktop table th:nth-child(10),
-      #table-container-desktop table td:nth-child(10) { width: 5%  !important; } /* Địa chỉ */
+      #table-container-desktop table td:nth-child(10) { width: 5%  !important; } /* TDP: đã viết tắt gọn */
       #table-container-desktop table th:nth-child(11),
-      #table-container-desktop table td:nth-child(11) { width: 6%  !important; } /* Kinh nghiệm */
+      #table-container-desktop table td:nth-child(11) { width: 11% !important; } /* Địa chỉ: chữ dài */
       #table-container-desktop table th:nth-child(12),
-      #table-container-desktop table td:nth-child(12) { width: 6%  !important; } /* Công việc */
+      #table-container-desktop table td:nth-child(12) { width: 8%  !important; } /* Kinh nghiệm */
       #table-container-desktop table th:nth-child(13),
-      #table-container-desktop table td:nth-child(13) { width: 4%  !important; } /* Cam kết */
+      #table-container-desktop table td:nth-child(13) { width: 8%  !important; } /* Công việc */
+      #table-container-desktop table th:nth-child(14),
+      #table-container-desktop table td:nth-child(14) { width: 4%  !important; } /* Cam kết: "Cam kết" / "---" */
     }
     .print-only { display: none; }
     @media print { .print-only { display: block !important; } }
@@ -324,17 +328,18 @@
           <thead>
             <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
               <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">STT</th>
-              <th class="py-3 px-1.5 w-[14%] text-left border-r border-red-600/30">Họ và tên</th>
+              <th class="py-3 px-1.5 w-[13%] text-left border-r border-red-600/30">Họ và tên</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
               <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">Cao / Nặng</th>
+              <th class="py-3 px-1.5 w-[5%] text-center border-r border-red-600/30">Size áo</th>
               <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
               <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
               <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
               <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">TDP</th>
-              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Địa chỉ</th>
-              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Kinh nghiệm</th>
-              <th class="py-3 px-1.5 w-[9%] text-left border-r border-red-600/30">Công việc</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Địa chỉ</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Kinh nghiệm</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Công việc</th>
               <th class="py-3 px-1.5 w-[8%] text-center">Cam kết</th>
             </tr>
           </thead>
@@ -656,7 +661,7 @@
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
-            <td colspan="13" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
+            <td colspan="14" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
               ${groupHeaderHtml}
             </td>
           `;
@@ -675,8 +680,9 @@
           <td class="py-2 px-1.5 text-center align-top text-black font-normal border-r border-gray-100/50">${displayStt}</td>
           <td class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${displayName(item)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
-          <td class="py-2 px-1.5 text-center align-top border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.sizeAo || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
           <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
@@ -699,7 +705,8 @@
           <div class="pl-7 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
             <p><span class="text-gray-400">DOB:</span> <strong class="text-gray-800">${formatNgaySinh(item.ngaySinh)}</strong></p>
             <p><span class="text-gray-400">GT:</span> <strong class="text-gray-800">${item.gioiTinh || '---'}</strong></p>
-            <p><span class="text-gray-400">Cao/Nặng:</span> <strong class="text-gray-800">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></p>
+            <p><span class="text-gray-400">Cao/Nặng:</span> <strong class="text-gray-800">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</strong></p>
+            <p><span class="text-gray-400">Size áo:</span> <strong class="text-gray-800">${item.sizeAo || '---'}</strong></p>
             <p><span class="text-gray-400">Tay thuận:</span> ${tayThuanBadge(item.tayThuan)}</p>
             <p><span class="text-gray-400">CCCD:</span> <strong class="text-gray-800">${formatCCCD(item.cccd)}</strong></p>
             <p><span class="text-gray-400">SĐT:</span> <a href="tel:${item.rawPhone}" class="font-semibold text-gray-800">${formatPhone(item.rawPhone)}</a></p>
@@ -766,13 +773,13 @@
       return result;
     }
 
-    // Rút gọn Chiều cao - Cân nặng: chỉ giữ lại số đo chiều cao (dạng 1m64, 165cm...)
+    // Tách chuỗi thô "Chiều cao - Cân nặng" thành 2 phần riêng: chiều cao (dạng 1m64, 165cm...)
     // và cân nặng (dạng 88kg), bỏ hết dấu câu/ký tự thừa (-, ~, /, khoảng...).
-    // Vd: "1m64-~88kg" -> "1m64 / 88kg"
-    function formatChieuCaoCanNang(raw) {
-      if (!raw) return '---';
+    // Trả về { heightPart, weightPart, raw } — raw dùng khi không nhận diện được gì cả.
+    function parseChieuCaoCanNang(raw) {
+      if (!raw) return null;
       const str = raw.toString().trim();
-      if (!str || str === '---') return '---';
+      if (!str || str === '---') return null;
 
       // 1. Chiều cao dạng "1m64", "1 m 64", "1,64m", "1.64m"
       let height = '';
@@ -794,15 +801,31 @@
       m = str.match(/(\d{2,3}(?:[.,]\d{1,2})?)\s*kg/i);
       if (m) weight = `${m[1]}kg`;
 
-      if (!height && !weight) return str; // Không nhận diện được gì thì giữ nguyên chuỗi gốc
+      if (!height && !weight) return { heightPart: null, weightPart: null, raw: str };
 
-      // Luôn hiển thị đủ 2 vế "Chiều cao / Cân nặng". Nếu thiếu 1 trong 2, hiển thị
+      // Luôn hiển thị đủ 2 vế Chiều cao / Cân nặng. Nếu thiếu 1 trong 2, hiển thị
       // placeholder rõ ràng thay vì bỏ trống, tránh gây hiểu lầm là thiếu dữ liệu:
-      // - Thiếu chiều cao -> "---"       (vd: --- / 90kg)
-      // - Thiếu cân nặng  -> "---kg"     (vd: 1m76 / ---kg)
-      const heightPart = height || '---';
-      const weightPart = weight || '---kg';
-      return `${heightPart} / ${weightPart}`;
+      // - Thiếu chiều cao -> "---"       - Thiếu cân nặng -> "---kg"
+      return { heightPart: height || '---', weightPart: weight || '---kg', raw: str };
+    }
+
+    // Bản dùng cho Excel (văn bản thuần, 1 dòng, cách nhau bằng dấu " / ")
+    // Vd: "1m64-~88kg" -> "1m64 / 88kg"
+    function formatChieuCaoCanNang(raw) {
+      const parsed = parseChieuCaoCanNang(raw);
+      if (!parsed) return '---';
+      if (!parsed.heightPart) return parsed.raw; // không nhận diện được gì -> giữ nguyên chuỗi gốc
+      return `${parsed.heightPart} / ${parsed.weightPart}`;
+    }
+
+    // Bản dùng cho hiển thị trên web & khi in/PDF: xuống dòng, KHÔNG dùng dấu "/".
+    // Vd: 1m65
+    //     59kg
+    function formatChieuCaoCanNangHTML(raw) {
+      const parsed = parseChieuCaoCanNang(raw);
+      if (!parsed) return '---';
+      if (!parsed.heightPart) return parsed.raw; // không nhận diện được gì -> giữ nguyên chuỗi gốc
+      return `${parsed.heightPart}<br>${parsed.weightPart}`;
     }
 
 
@@ -883,21 +906,21 @@
       return 'khac';
     }
 
-    // Màu + icon FontAwesome dùng cho giao diện web (bảng desktop & thẻ mobile)
+    // Màu dùng cho giao diện web (bảng desktop & thẻ mobile) — đã bỏ icon bàn tay, chỉ còn viên màu + chữ
     const TAY_THUAN_STYLE = {
-      trai: { icon: 'fa-hand-point-left',  label: 'Trái',     badgeClass: 'bg-blue-100 text-blue-700 border border-blue-300' },
-      phai: { icon: 'fa-hand-point-right', label: 'Phải',     badgeClass: 'bg-emerald-100 text-emerald-700 border border-emerald-300' },
-      ca2:  { icon: 'fa-hands',            label: 'Cả 2 bên', badgeClass: 'bg-amber-100 text-amber-700 border border-amber-300' },
-      khac: { icon: 'fa-circle-question',  label: null,       badgeClass: 'bg-gray-100 text-gray-600 border border-gray-300' }
+      trai: { label: 'Trái',     badgeClass: 'bg-blue-100 text-blue-700 border border-blue-300' },
+      phai: { label: 'Phải',     badgeClass: 'bg-emerald-100 text-emerald-700 border border-emerald-300' },
+      ca2:  { label: 'Cả 2 bên', badgeClass: 'bg-amber-100 text-amber-700 border border-amber-300' },
+      khac: { label: null,       badgeClass: 'bg-gray-100 text-gray-600 border border-gray-300' }
     };
 
-    // Trả về HTML "viên thuốc" (pill) màu + icon cho cột Tay thuận
+    // Trả về HTML "viên thuốc" (pill) màu cho cột Tay thuận (không icon)
     function tayThuanBadge(raw) {
       const type = classifyTayThuan(raw);
       if (!type) return '<span class="text-gray-400">---</span>';
       const cfg = TAY_THUAN_STYLE[type];
       const label = cfg.label || raw.toString().trim();
-      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}"><i class="fa-solid ${cfg.icon}"></i>${label}</span>`;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}">${label}</span>`;
     }
 
     // Màu (mã hex, không dấu #) + nhãn có ký hiệu mũi tên dùng khi xuất Excel
@@ -991,11 +1014,11 @@
     ];
 
     const EXCEL_HEADERS = [
-      'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Tay thuận',
+      'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Size áo', 'Tay thuận',
       'Số CCCD', 'Ngày cấp', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
     ];
-    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 14 cột -> cột cuối là "N"
-    const EXCEL_LAST_COL_LETTER = 'N';
+    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 15 cột -> cột cuối là "O"
+    const EXCEL_LAST_COL_LETTER = 'O';
 
     function thinBorder(colorHex) {
       const side = { style: 'thin', color: { rgb: colorHex } };
@@ -1041,6 +1064,7 @@
           formatNgaySinh(item.ngaySinh),
           item.gioiTinh || '---',
           formatChieuCaoCanNang(item.chieuCaoCanNang),
+          item.sizeAo || '---',
           formatTayThuanExcelLabel(item.tayThuan),
           cccdParts.number || '---',
           cccdParts.date || '---',
@@ -1069,7 +1093,7 @@
       // ---- Độ rộng từng cột: nới rộng hơn hẳn so với bản trước, đặc biệt các cột
       // chứa thông tin dài (Họ và tên, Địa chỉ, Kinh nghiệm, Công việc, CCCD, TDP)
       // để chữ không bị dồn/lấp và dễ đọc hơn.
-      const COL_WCH = [8, 26, 13, 10, 13, 11, 14, 12, 16, 20, 34, 28, 28, 12];
+      const COL_WCH = [8, 26, 13, 10, 13, 10, 11, 14, 12, 16, 20, 34, 28, 28, 12];
       ws['!cols'] = COL_WCH.map(wch => ({ wch }));
 
       // ---- Chiều cao dòng: tính ĐỘNG theo độ dài nội dung từng dòng, đảm bảo đủ chỗ
@@ -1086,7 +1110,7 @@
         }, 0);
       }
 
-      const WRAP_COLS = [1, 9, 10, 11, 12]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc
+      const WRAP_COLS = [1, 10, 11, 12, 13]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc
       const LINE_HEIGHT_PT = 15;   // chiều cao 1 dòng chữ (pt), tương ứng cỡ chữ ~10.5
       const ROW_PADDING_PT = 8;    // đệm trên dưới cho thoáng, dễ nhìn
       const MIN_DATA_ROW_HPT = 26; // chiều cao tối thiểu mỗi dòng dữ liệu (rộng rãi hơn bản cũ)
@@ -1120,7 +1144,7 @@
       ws['!freeze'] = { xSplit: 0, ySplit: HEADER_ROW_INDEX + 1 };
       ws['!sheetViews'] = [{ state: 'frozen', xSplit: 0, ySplit: HEADER_ROW_INDEX + 1, topLeftCell: `A${HEADER_ROW_INDEX + 2}` }];
 
-      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 13]); // STT, DOB, GT, Cao/Nặng, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết
+      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 9, 14]); // STT, DOB, GT, Cao/Nặng, Size áo, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết
 
       // ---- Style dòng tiêu đề CLB (dòng 1-2) ----
       ['A1', 'A2'].forEach((addr, i) => {
@@ -1166,15 +1190,15 @@
           let cellFontColor = '1F2937';
           let cellBold = c === 1;
 
-          // Riêng cột "Số CCCD" (c === 6): in đậm để dễ nhìn. Vì đã tách riêng khỏi
-          // cột "Ngày cấp" (c === 7), việc đậm ở đây không ảnh hưởng tới ngày cấp.
-          if (c === 6) {
+          // Riêng cột "Số CCCD" (c === 7): in đậm để dễ nhìn. Vì đã tách riêng khỏi
+          // cột "Ngày cấp" (c === 8), việc đậm ở đây không ảnh hưởng tới ngày cấp.
+          if (c === 7) {
             cellBold = true;
           }
 
-          // Riêng cột "Tay thuận" (c === 5): tô màu + in đậm riêng theo Trái/Phải/Cả 2 bên
+          // Riêng cột "Tay thuận" (c === 6): tô màu + in đậm riêng theo Trái/Phải/Cả 2 bên
           // để nhìn vào là biết ngay, không lẫn với màu Tổ dân phố của cả hàng.
-          if (c === 5) {
+          if (c === 6) {
             const type = classifyTayThuan(item.tayThuan);
             if (type) {
               const styleCfg = TAY_THUAN_EXCEL_STYLE[type];
