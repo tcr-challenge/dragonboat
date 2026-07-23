@@ -12,7 +12,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>CLB Thuyền Rồng - Đình Thượng Cát (Bản đầy đủ SĐT - In/PDF)</title>
+  <title>CLB Bơi thuyền rồng Đình Thượng Cát (Bản đầy đủ SĐT - In/PDF)</title>
   <!-- Tailwind CSS để tạo giao diện nhanh, đẹp, chuẩn di động -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <!-- FontAwesome để chèn icon -->
@@ -232,7 +232,7 @@
         </div>
       </div>
       <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
-        CÂU LẠC BỘ BƠI THUYỀN RỒNG
+        CLB BƠI THUYỀN RỒNG
       </h1>
       <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
         ĐÌNH THƯỢNG CÁT
@@ -445,7 +445,13 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tổ dân phố</label>
-            <input id="m-toDanPho" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="TDP Thượng Cát 1">
+            <select id="m-toDanPho" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="TDP Thượng Cát 1">TDP Thượng Cát 1</option>
+              <option value="TDP Thượng Cát 2">TDP Thượng Cát 2</option>
+              <option value="TDP Thượng Cát 3">TDP Thượng Cát 3</option>
+              <option value="TDP Thượng Cát 4">TDP Thượng Cát 4</option>
+            </select>
           </div>
 
           <div>
@@ -477,7 +483,8 @@
               <option value="M">M</option>
               <option value="L">L</option>
               <option value="XL">XL</option>
-              <option value="XXL">XXL</option>
+              <option value="2XL">2XL</option>
+              <option value="3XL">3XL</option>
             </select>
           </div>
           <div>
@@ -497,7 +504,12 @@
 
           <div class="md:col-span-2">
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kinh nghiệm</label>
-            <textarea id="m-kinhNghiem" rows="2" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Đã từng tham gia bơi thuyền rồng..."></textarea>
+            <select id="m-kinhNghiem" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="Chưa có kinh nghiệm">Chưa có kinh nghiệm</option>
+              <option value="Đã từng">Đã từng</option>
+              <option value="Đã tham gia đội bơi nhiều năm">Đã tham gia đội bơi nhiều năm</option>
+            </select>
           </div>
 
           <div class="md:col-span-2">
@@ -532,7 +544,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-800 pb-6 text-left">
         <div>
           <h4 class="text-white font-bold uppercase text-base tracking-wide mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-ship text-amber-400"></i> CLB Bơi Thuyền Rồng Đình Thượng Cát
+            <i class="fa-solid fa-ship text-amber-400"></i> CLB Bơi thuyền rồng Đình Thượng Cát
           </h4>
           <p class="text-xs text-gray-400 leading-relaxed">
             Chào mừng các thành viên tham gia tập luyện và phát triển phong trào thể thao truyền thống bơi thuyền rồng tại quê hương Thượng Cát.
@@ -541,7 +553,7 @@
         <div class="space-y-2 text-xs">
           <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
           <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: Mr. Đàm Xuân Quý</span></p>
-          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: Duyệt theo đăng ký </span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: Duyệt thành viên</span></p>
           <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: <a href="https://web.facebook.com/thuongcatdragonboat" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer">fb/thuongcatdragonboat</a></span></p>
         </div>
       </div>
@@ -1647,7 +1659,7 @@
       // ---- Xây dữ liệu dạng mảng 2 chiều (AOA) ----
       // Tiêu đề viết hoa chữ cái đầu (không viết hoa toàn bộ), độ nổi bật đến từ
       // cỡ chữ lớn + nền đỏ đậm + chữ trắng đậm thay vì "hét" bằng chữ hoa toàn bộ.
-      const titleRow1 = ['CÂU LẠC BỘ BƠI THUYỀN RỒNG - ĐÌNH THƯỢNG CÁT'];
+      const titleRow1 = ['CLB BƠI THUYỀN RỒNG ĐÌNH THƯỢNG CÁT'];
       const titleRow2 = ['DANH SÁCH THÀNH VIÊN'];
       const dateRow = ['Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '   |   Tổng số: ' + list.length + ' thành viên   |   Copyright by LangBenSong '];
 
