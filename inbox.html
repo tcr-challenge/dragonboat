@@ -1,0 +1,1589 @@
+<!--
+  ⚠️ GHI CHÚ QUAN TRỌNG:
+  Đây là BẢN NỘI BỘ hiển thị ĐẦY ĐỦ thông tin thành viên (kể cả SĐT, CCCD, địa chỉ...) + có nút In/Xuất PDF,
+  dùng để anh in danh sách hoặc lưu PDF cho Ban chủ nhiệm/quản lý CLB.
+  Trang này KHÔNG còn lớp mật khẩu bảo vệ theo yêu cầu. Anh lưu ý:
+  - KHÔNG nên đăng công khai file này lên GitHub Pages hay bất kỳ nơi công cộng nào,
+    vì sẽ lộ toàn bộ thông tin cá nhân (CCCD, SĐT, địa chỉ...) của tất cả thành viên.
+  - Chỉ nên mở trực tiếp file này trên máy tính/điện thoại của anh, hoặc lưu ở nơi riêng tư.
+-->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>CLB Thuyền Rồng - Đình Thượng Cát (Bản đầy đủ SĐT - In/PDF)</title>
+  <!-- Tailwind CSS để tạo giao diện nhanh, đẹp, chuẩn di động -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- FontAwesome để chèn icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Thư viện xuất Excel (.xlsx) có hỗ trợ tô màu/định dạng ô (fork của SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .bg-gradient-header {
+      background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('images/bannerdb.jpg') center/cover no-repeat;
+      /* 🖼️ CHỖ THAY ẢNH BANNER (2/2): muốn dùng hẳn 1 tấm ẢNH làm nền banner đỏ thay vì màu gradient,
+         xoá dòng "background: linear-gradient(...)" phía trên và thêm dòng dưới đây (bỏ dấu / * * / để kích hoạt):
+         background: linear-gradient(135deg, rgba(185,28,28,0.85), rgba(127,29,29,0.9)), url('ĐƯỜNG_DẪN_ẢNH_BANNER_CỦA_ANH.jpg') center/cover no-repeat;
+      */
+    }
+
+    /* ===== CHẾ ĐỘ IN / XUẤT PDF =====
+       Khi bấm nút "In / Xuất PDF", trình duyệt sẽ mở hộp thoại in.
+       CSS bên dưới đảm bảo bản in luôn hiển thị dạng BẢNG đầy đủ (kể cả khi đang xem trên điện thoại),
+       ẩn bớt các phần không cần thiết (ô tìm kiếm, tab, nút bấm, footer liên hệ...) để bản in/PDF gọn, đẹp. */
+    @page {
+      size: landscape;
+      margin: 10mm;
+    }
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      #table-container-desktop { display: block !important; overflow: visible !important; }
+      #cards-header, #cards-container { display: none !important; }
+      main { max-width: 100% !important; padding: 0 !important; }
+      table { font-size: 8.5px; width: 100%; table-layout: fixed; border-collapse: collapse; }
+      th, td {
+        padding: 3px 4px !important;
+        line-height: 1.25 !important;
+        /* Bắt buộc chữ tự xuống dòng trong ô thay vì tràn ra ngoài (khắc phục lỗi
+           CCCD/SĐT/Họ tên bị dính chữ, tràn cột khi in) */
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+      }
+      /* Badge "Tay thuận" khi in: vẫn giữ gọn trên 1 dòng nhưng không đẩy tràn cột */
+      td .inline-flex { white-space: normal !important; }
+      .rounded-2xl, .shadow-sm, .shadow-lg { box-shadow: none !important; border-radius: 0 !important; }
+
+      /* Độ rộng từng cột khi in được tính theo ĐỘ DÀI NỘI DUNG THỰC TẾ của từng trường
+         (không còn ưu tiên phóng to Họ và tên/Ngày sinh như trước), để không cột nào
+         bị quá hẹp (chữ dồn/tràn dòng) hay quá rộng (thừa khoảng trắng vô ích).
+         Tổng cộng đúng 100% chiều rộng khổ giấy ngang (landscape) để vừa đúng 1 trang. */
+      #table-container-desktop table th:nth-child(1),
+      #table-container-desktop table td:nth-child(1)  { width: 3%  !important; } /* STT: 1-3 chữ số */
+      #table-container-desktop table th:nth-child(2),
+      #table-container-desktop table td:nth-child(2)  { width: 17% !important; } /* Họ và tên: cột dài nhất, cần rộng nhất */
+      #table-container-desktop table th:nth-child(3),
+      #table-container-desktop table td:nth-child(3)  { width: 7%  !important; } /* Ngày sinh: dd/mm/yyyy */
+      #table-container-desktop table th:nth-child(4),
+      #table-container-desktop table td:nth-child(4)  { width: 3%  !important; } /* GT: Nam/Nữ */
+      #table-container-desktop table th:nth-child(5),
+      #table-container-desktop table td:nth-child(5)  { width: 7%  !important; } /* Cao/Nặng: vd 1m70 / 70kg */
+      #table-container-desktop table th:nth-child(6),
+      #table-container-desktop table td:nth-child(6)  { width: 4%  !important; } /* Size áo: S/M/L/XL */
+      #table-container-desktop table th:nth-child(7),
+      #table-container-desktop table td:nth-child(7)  { width: 6%  !important; } /* Tay thuận: Trái/Phải/Cả 2 bên */
+      #table-container-desktop table th:nth-child(8),
+      #table-container-desktop table td:nth-child(8)  { width: 10% !important; } /* CCCD: số 12 chữ số + ngày cấp (2 dòng) */
+      #table-container-desktop table th:nth-child(9),
+      #table-container-desktop table td:nth-child(9)  { width: 7%  !important; } /* SĐT: 10 số dạng nhóm 4-3-3 */
+      #table-container-desktop table th:nth-child(10),
+      #table-container-desktop table td:nth-child(10) { width: 5%  !important; } /* TDP: đã viết tắt gọn */
+      #table-container-desktop table th:nth-child(11),
+      #table-container-desktop table td:nth-child(11) { width: 11% !important; } /* Địa chỉ: chữ dài */
+      #table-container-desktop table th:nth-child(12),
+      #table-container-desktop table td:nth-child(12) { width: 8%  !important; } /* Kinh nghiệm */
+      #table-container-desktop table th:nth-child(13),
+      #table-container-desktop table td:nth-child(13) { width: 8%  !important; } /* Công việc */
+      #table-container-desktop table th:nth-child(14),
+      #table-container-desktop table td:nth-child(14) { width: 4%  !important; } /* Cam kết: "Cam kết" / "---" */
+    }
+    .print-only { display: none; }
+    @media print { .print-only { display: block !important; } }
+
+    /* ===== HOẠT CẢNH LOADING: THUYỀN RỒNG BƠI TRÊN SÓNG ===== */
+    .boat-loading-scene { position: relative; width: 220px; height: 92px; margin: 0 auto; }
+    .boat-loading-boat { position: absolute; left: 0; top: 0; width: 220px; height: 70px; z-index: 2; }
+    .boat-bob-group { transform-box: fill-box; transform-origin: center; animation: boatBobAnim 2.1s ease-in-out infinite; }
+    @keyframes boatBobAnim {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-4px) rotate(-1.2deg); }
+    }
+    .boat-paddle { transform-box: fill-box; animation: paddleRowAnim 0.9s ease-in-out infinite; }
+    @keyframes paddleRowAnim {
+      0%, 100% { transform: rotate(8deg); }
+      50%      { transform: rotate(-38deg); }
+    }
+    .boat-paddle-1 { animation-delay: 0s; }
+    .boat-paddle-2 { animation-delay: 0.18s; }
+    .boat-paddle-3 { animation-delay: 0.36s; }
+    .boat-paddle-4 { animation-delay: 0.54s; }
+    .boat-wave-wrap { position: absolute; left: 0; bottom: 0; width: 220px; height: 34px; overflow: hidden; z-index: 1; }
+    .boat-wave-svg { position: absolute; top: 0; left: 0; height: 34px; width: 440px; }
+    .boat-wave-back { animation: waveScrollAnim 3.2s linear infinite; opacity: 0.55; }
+    .boat-wave-front { animation: waveScrollAnim 1.8s linear infinite reverse; opacity: 0.9; }
+    @keyframes waveScrollAnim {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-220px); }
+    }
+    .boat-loading-text {
+      animation: boatTextPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes boatTextPulse {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: 0.6; }
+    }
+
+    /* ===== PHIÊN BẢN LOGO HEADER: Y NGUYÊN THUYỀN RỒNG + SÓNG NƯỚC CỦA MÀN LOADING,
+       chỉ phóng to hơn (x1.5) để nhìn rõ chi tiết con thuyền và sóng ngay trên banner ===== */
+    .boat-header-scene { position: relative; width: 330px; height: 138px; margin: 0 auto; }
+    .boat-header-boat { position: absolute; left: 0; top: 0; width: 330px; height: 105px; z-index: 2; }
+    .boat-header-wave-wrap { position: absolute; left: 0; bottom: 0; width: 330px; height: 51px; overflow: hidden; z-index: 1; }
+    .boat-header-wave-svg { position: absolute; top: 0; left: 0; height: 51px; width: 660px; }
+    .boat-header-wave-back { animation: waveScrollHeaderAnim 3.2s linear infinite; opacity: 0.55; }
+    .boat-header-wave-front { animation: waveScrollHeaderAnim 1.8s linear infinite reverse; opacity: 0.9; }
+    @keyframes waveScrollHeaderAnim {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-330px); }
+    }
+    /* Màn hình rất nhỏ (< 380px): thu nhỏ lại logo header để không bị tràn ngang */
+    @media (max-width: 380px) {
+      .boat-header-scene { transform: scale(0.78); transform-origin: center top; margin-bottom: -28px; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- 1. BANNER -->
+  <header class="bg-gradient-header text-white shadow-lg relative overflow-hidden no-print">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="container mx-auto px-4 py-8 md:py-12 text-center relative z-10">
+      <!-- 🖼️ CHỖ THAY ẢNH BANNER/LOGO CLB (1/2):
+           A) Đổi LOGO tròn: xoá thẻ <i class="fa-solid fa-ship..."></i> bên dưới,
+              thay bằng: <img src="ĐƯỜNG_DẪN_ẢNH_LOGO_CỦA_ANH.jpg" class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover">
+           B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
+      <div class="inline-block mb-3">
+        <div class="boat-header-scene">
+          <!-- Sóng nước (2 lớp, chạy ngược chiều nhau) — giống hệt màn Loading, chỉ phóng to -->
+          <div class="boat-header-wave-wrap">
+            <svg class="boat-header-wave-svg boat-header-wave-back" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,20 Q13.75,10 27.5,20 T55,20 T82.5,20 T110,20 T137.5,20 T165,20 T192.5,20 T220,20 T247.5,20 T275,20 T302.5,20 T330,20 T357.5,20 T385,20 T412.5,20 T440,20 V34 H0 Z" fill="#2563eb"/>
+            </svg>
+            <svg class="boat-header-wave-svg boat-header-wave-front" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,22 Q13.75,14 27.5,22 T55,22 T82.5,22 T110,22 T137.5,22 T165,22 T192.5,22 T220,22 T247.5,22 T275,22 T302.5,22 T330,22 T357.5,22 T385,22 T412.5,22 T440,22 V34 H0 Z" fill="#1d4ed8"/>
+            </svg>
+          </div>
+
+          <!-- Thuyền rồng + các tay chèo — giống hệt màn Loading, chỉ phóng to -->
+          <svg class="boat-header-boat" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="boat-bob-group">
+              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="1.5"/>
+              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+              <circle cx="9" cy="35" r="1.6" fill="#fde047"/>
+              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#dc2626"/>
+              <g>
+                <circle cx="55" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="50" y="38" width="10" height="10" rx="3" fill="#f59e0b"/>
+                <line x1="59" y1="40" x2="74" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-1"/>
+              </g>
+              <g>
+                <circle cx="90" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="85" y="38" width="10" height="10" rx="3" fill="#059669"/>
+                <line x1="94" y1="40" x2="109" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-2"/>
+              </g>
+              <g>
+                <circle cx="125" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="120" y="38" width="10" height="10" rx="3" fill="#2563eb"/>
+                <line x1="129" y1="40" x2="144" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-3"/>
+              </g>
+              <g>
+                <circle cx="160" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="155" y="38" width="10" height="10" rx="3" fill="#fbbf24"/>
+                <line x1="164" y1="40" x2="179" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
+        CÂU LẠC BỘ THUYỀN RỒNG
+      </h1>
+      <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
+        ĐÌNH THƯỢNG CÁT
+      </h2>
+      <p class="text-base md:text-lg font-semibold text-red-100 mt-3 tracking-normal max-w-md mx-auto bg-black/10 py-2 px-4 rounded-full">
+        <i class="fa-solid fa-users mr-1.5"></i> BẢN ĐẦY ĐỦ DÀNH CHO CÁC LEADER PHỤ TRÁCH TUYỂN QUÂN
+      </p>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="w-full mx-auto px-4 py-6 flex-grow max-w-[1400px]">
+
+    <!-- Tiêu đề chỉ hiện ra khi IN / xuất PDF (thay cho banner ảnh, vì ảnh nền in không đẹp) -->
+    <div class="print-only text-center mb-4">
+      <h1 class="text-xl font-extrabold uppercase">BẢN QUẢN LÝ NỘI BỘ CÓ HIỂN THỊ SỐ ĐIỆN THOẠI - CĂN CƯỚC CÔNG DÂN</h1>
+      <p class="text-sm font-medium">LEADER SỬ DỤNG ĐỂ THÊM THÀNH VIÊN VÀO NHÓM ZALO</p>
+      <p class="text-[11px] text-gray-500" id="print-date"></p>
+    </div>
+
+    <!-- 4. TỔNG SỐ THÀNH VIÊN + NÚT IN / XUẤT PDF -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 flex items-center justify-between gap-3.5 flex-wrap no-print">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+          <i class="fa-solid fa-users text-xl"></i>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">Tổng cộng:</span>
+          <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
+          <span class="text-sm font-medium text-gray-500">thành viên</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button onclick="openAddModal()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
+          <i class="fa-solid fa-user-plus"></i> Thêm thành viên
+        </button>
+        <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
+          <i class="fa-solid fa-file-excel"></i> Xuất Excel
+        </button>
+        <button onclick="window.print()" class="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
+          <i class="fa-solid fa-file-pdf"></i> In / Xuất PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. MỤC TÌM KIẾM -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 no-print">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input 
+          type="text" 
+          id="search-input" 
+          oninput="filterMembers()"
+          placeholder="Nhập TÊN hoặc SỐ ĐIỆN THOẠI" 
+          class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all shadow-inner placeholder:text-gray-400"
+        >
+      </div>
+    </div>
+
+    <!-- 5. DANH SÁCH THÀNH VIÊN ĐÃ ĐĂNG KÝ -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <!-- Trạng thái Loading ban đầu -->
+      <div id="loading" class="py-10 px-4 text-center text-gray-400 flex flex-col items-center justify-center gap-4">
+
+        <div class="boat-loading-scene">
+          <!-- Sóng nước (2 lớp, chạy ngược chiều nhau tạo hiệu ứng lăn tăn) -->
+          <div class="boat-wave-wrap">
+            <svg class="boat-wave-svg boat-wave-back" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,20 Q13.75,10 27.5,20 T55,20 T82.5,20 T110,20 T137.5,20 T165,20 T192.5,20 T220,20 T247.5,20 T275,20 T302.5,20 T330,20 T357.5,20 T385,20 T412.5,20 T440,20 V34 H0 Z" fill="#2563eb"/>
+            </svg>
+            <svg class="boat-wave-svg boat-wave-front" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,22 Q13.75,14 27.5,22 T55,22 T82.5,22 T110,22 T137.5,22 T165,22 T192.5,22 T220,22 T247.5,22 T275,22 T302.5,22 T330,22 T357.5,22 T385,22 T412.5,22 T440,22 V34 H0 Z" fill="#1d4ed8"/>
+            </svg>
+          </div>
+
+          <!-- Thuyền rồng + các tay chèo -->
+          <svg class="boat-loading-boat" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
+            <g class="boat-bob-group">
+              <!-- Thân thuyền -->
+              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="1.5"/>
+              <!-- Đầu rồng phía mũi thuyền -->
+              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+              <circle cx="9" cy="35" r="1.6" fill="#fde047"/>
+              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Đuôi rồng phía lái thuyền -->
+              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#dc2626"/>
+
+              <!-- 4 người đang chèo thuyền, tay chèo chuyển động so le -->
+              <g>
+                <circle cx="55" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="50" y="38" width="10" height="10" rx="3" fill="#f59e0b"/>
+                <line x1="59" y1="40" x2="74" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-1"/>
+              </g>
+              <g>
+                <circle cx="90" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="85" y="38" width="10" height="10" rx="3" fill="#059669"/>
+                <line x1="94" y1="40" x2="109" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-2"/>
+              </g>
+              <g>
+                <circle cx="125" cy="33" r="5.5" fill="#fcd9b8"/>
+                <rect x="120" y="38" width="10" height="10" rx="3" fill="#2563eb"/>
+                <line x1="129" y1="40" x2="144" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-3"/>
+              </g>
+              <g>
+                <circle cx="160" cy="33" r="5.5" fill="#f4c9a3"/>
+                <rect x="155" y="38" width="10" height="10" rx="3" fill="#fbbf24"/>
+                <line x1="164" y1="40" x2="179" y2="30" stroke="#78350f" stroke-width="2" stroke-linecap="round" class="boat-paddle boat-paddle-4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <p class="boat-loading-text text-sm md:text-base font-bold text-red-700 tracking-wide">
+          <i class="fa-solid fa-flag-checkered mr-1.5 text-red-600"></i>
+          Thuyền Rồng đang trên đường đua, gần về đích rồi...
+        </p>
+        <p class="text-xs text-gray-400">Đang kết nối đồng bộ dữ liệu Sheet...</p>
+      </div>
+
+      <!-- Bảng hiển thị Desktop -->
+      <div id="table-container-desktop" class="hidden md:block overflow-hidden" style="display: none;">
+        <table class="w-full text-left border-collapse table-fixed" id="members-table">
+          <thead>
+            <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+              <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">STT</th>
+              <th class="py-3 px-1.5 w-[13%] text-left border-r border-red-600/30">Họ và tên</th>
+              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
+              <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
+              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">Cao / Nặng</th>
+              <th class="py-3 px-1.5 w-[5%] text-center border-r border-red-600/30">Size áo</th>
+              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
+              <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
+              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
+              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">TDP</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Địa chỉ</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Kinh nghiệm</th>
+              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Công việc</th>
+              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Cam kết</th>
+              <th class="py-3 px-1.5 w-[5%] text-center no-print">Sửa</th>
+            </tr>
+          </thead>
+          <tbody id="table-body" class="divide-y divide-gray-100 text-xs font-medium text-gray-700">
+            <!-- Dữ liệu tự động đổ vào -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Danh sách dạng Thẻ Mobile -->
+      <div id="cards-header" class="hidden max-md:flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white text-[11px] font-bold uppercase tracking-wider" style="display: none;">
+        <span class="w-4.5 shrink-0 text-center"><i class="fa-solid fa-list-ol"></i></span>
+        <span class="flex-1"><i class="fa-solid fa-user mr-1"></i> Họ và tên</span>
+        <span class="shrink-0">Chi tiết đầy đủ bên dưới</span>
+      </div>
+      <div id="cards-container" class="hidden max-md:block divide-y divide-gray-100" style="display: none;">
+        <!-- Dữ liệu tự động đổ vào -->
+      </div>
+
+      <!-- Thông báo khi không có kết quả -->
+      <div id="no-result" class="hidden py-12 text-center text-gray-400">
+        <i class="fa-solid fa-folder-open text-3xl mb-2 text-gray-300"></i>
+        <p class="text-sm">Không tìm thấy thành viên nào khớp với từ khóa tìm kiếm!</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 6. MODAL THÊM / SỬA THÀNH VIÊN -->
+  <div id="member-modal" class="no-print hidden fixed inset-0 z-50 items-center justify-center p-3 md:p-6">
+    <div id="member-modal-backdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative bg-white w-full max-w-3xl max-h-[92vh] rounded-2xl shadow-xl overflow-hidden flex flex-col">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-red-700 text-white">
+        <h3 id="member-modal-title" class="text-base md:text-lg font-bold flex items-center gap-2">
+          <i class="fa-solid fa-user-pen"></i> Thêm thành viên
+        </h3>
+        <button type="button" onclick="closeMemberModal()" class="text-white/80 hover:text-white text-xl leading-none px-1 cursor-pointer">&times;</button>
+      </div>
+
+      <form id="member-form" onsubmit="submitMemberForm(event)" class="overflow-y-auto px-5 py-5 space-y-4">
+        <input type="hidden" id="m-rowIndex" value="">
+
+        <div id="member-form-error" class="hidden text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Họ và tên <span class="text-red-600">*</span></label>
+            <input id="m-hoTen" type="text" required class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Nguyễn Văn A">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày sinh</label>
+            <input id="m-ngaySinh" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Giới tính</label>
+            <select id="m-gioiTinh" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="Nam">Nam</option>
+              <option value="Nữ">Nữ</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Số điện thoại</label>
+            <input id="m-rawPhone" type="tel" maxlength="11" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="09xxxxxxxx">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tổ dân phố</label>
+            <input id="m-toDanPho" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="TDP Thượng Cát 1">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Số CCCD</label>
+            <input id="m-cccdSo" type="text" inputmode="numeric" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="12 số">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày cấp CCCD</label>
+            <input id="m-cccdNgayCap" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Chiều cao</label>
+            <input id="m-chieuCao" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="vd: 1m70">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Cân nặng</label>
+            <input id="m-canNang" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="vd: 65kg">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Size áo</label>
+            <select id="m-sizeAo" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="XXL">XXL</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Tay thuận</label>
+            <select id="m-tayThuan" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="Trái">Trái</option>
+              <option value="Phải">Phải</option>
+              <option value="Cả 2 bên">Cả 2 bên</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Địa chỉ</label>
+            <input id="m-diaChi" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Số nhà, ngõ, đường...">
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kinh nghiệm</label>
+            <textarea id="m-kinhNghiem" rows="2" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Đã từng tham gia bơi thuyền rồng..."></textarea>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Công việc</label>
+            <input id="m-congViec" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+
+          <div class="md:col-span-2 flex items-center gap-2 pt-1">
+            <input id="m-camKet" type="checkbox" class="w-4 h-4 accent-red-700">
+            <label for="m-camKet" class="text-sm font-medium text-gray-700">Đã cam kết tham gia</label>
+          </div>
+        </div>
+      </form>
+
+      <div class="flex items-center justify-between gap-2 px-5 py-4 border-t border-gray-100 bg-gray-50">
+        <button type="button" id="member-delete-btn" onclick="deleteMemberFromModal()" class="hidden inline-flex items-center gap-2 text-red-700 hover:text-white hover:bg-red-700 border border-red-200 text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors cursor-pointer">
+          <i class="fa-solid fa-trash"></i> Xoá thành viên
+        </button>
+        <div class="flex items-center gap-2 ml-auto">
+          <button type="button" onclick="closeMemberModal()" class="text-gray-600 hover:text-gray-900 text-sm font-semibold px-4 py-2.5 rounded-lg cursor-pointer">Huỷ</button>
+          <button type="submit" form="member-form" id="member-save-btn" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition-colors cursor-pointer">
+            <i class="fa-solid fa-floppy-disk"></i> <span id="member-save-btn-text">Lưu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. FOOTER -->
+  <footer class="bg-gray-900 text-gray-300 text-sm mt-12 border-t border-gray-800 no-print">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-800 pb-6 text-left">
+        <div>
+          <h4 class="text-white font-bold uppercase text-base tracking-wide mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-ship text-amber-400"></i> CLB Thuyền Rồng Đình Thượng Cát
+          </h4>
+          <p class="text-xs text-gray-400 leading-relaxed">
+            Chào mừng các thành viên tham gia tập luyện và phát triển phong trào thể thao truyền thống bơi thuyền rồng tại quê hương Thượng Cát.
+          </p>
+        </div>
+        <div class="space-y-2 text-xs">
+          <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: <a href="https://web.facebook.com/thuongcatdragonboat" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer">fb/thuongcatdragonboat</a></span></p>
+        </div>
+      </div>
+      <div class="pt-4 text-center text-xs text-gray-500">
+        <p>&copy; 2026 Copyright by <a href="https://web.facebook.com/thuongcatbactuliemhanoi/" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-white hover:underline cursor-pointer">LangBenSong</a>. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Link API — gọi qua Cloudflare Worker trung gian (KHÔNG gọi thẳng Apps Script nữa).
+    // Worker sẽ tự âm thầm gọi Apps Script thật + khóa thật ở phía server, nên link Apps Script gốc
+    // và khóa thật không còn xuất hiện trong file này / trình duyệt nữa.
+    // ⚠️ Không chia sẻ link này (kèm token) ra ngoài, vì ai có link này sẽ xem được toàn bộ dữ liệu.
+    const API_URL = "https://dragonboat-proxy.thuongcatdragonboat.workers.dev/?token=D5NJBsWU1gb4nv7YvCrmJaN88F5zXIjd";
+
+    let allMembers = [];
+
+    // Nhận diện thiết bị di động thực sự để hiển thị giao diện tối giản hơn.
+    // Kết hợp nhiều tín hiệu (User Agent + khả năng cảm ứng + con trỏ "thô" + kích thước màn hình)
+    // vì chỉ dựa vào User Agent đôi khi không đủ tin cậy (một số trình duyệt/app trong app
+    // như Facebook, Zalo... có thể gửi User Agent không chuẩn).
+    function isMobileDevice() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      const uaMatch = /android|iphone|ipad|ipod|windows phone|blackberry|iemobile|opera mini|mobile|silk/i.test(ua);
+
+      const hasTouch = (navigator.maxTouchPoints > 1) || ('ontouchstart' in window);
+      const coarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      const noHover = window.matchMedia && window.matchMedia('(hover: none)').matches;
+      const smallScreen = Math.min(window.innerWidth, window.innerHeight) <= 820;
+
+      // Chỉ cần 1 trong 2 điều kiện đúng là coi như thiết bị di động:
+      // (1) User Agent nhận diện được là điện thoại/máy bảng
+      // (2) Thiết bị có cảm ứng thật sự (không phải chuột) + màn hình nhỏ
+      return uaMatch || (hasTouch && (coarsePointer || noHover) && smallScreen);
+    }
+    let isMobile = isMobileDevice();
+
+    // Nếu người dùng xoay màn hình hoặc thay đổi kích thước cửa sổ, cập nhật lại và vẽ lại danh sách
+    window.addEventListener('resize', () => {
+      const nowMobile = isMobileDevice();
+      if (nowMobile !== isMobile) {
+        isMobile = nowMobile;
+        if (allMembers.length) sortAndRender(allMembers);
+      }
+    });
+
+    // Danh sách mã màu nền tương phản cao để phân biệt từng TDP khác nhau
+    const bgColorsTable = [
+      'bg-slate-100 hover:bg-slate-200',
+      'bg-blue-100 hover:bg-blue-200',
+      'bg-amber-100 hover:bg-amber-200',
+      'bg-emerald-100 hover:bg-emerald-200',
+      'bg-purple-100 hover:bg-purple-200',
+      'bg-orange-100 hover:bg-orange-200',
+      'bg-teal-100 hover:bg-teal-200',
+      'bg-rose-100 hover:bg-rose-200',
+      'bg-indigo-100 hover:bg-indigo-200',
+      'bg-lime-100 hover:bg-lime-200'
+    ];
+
+    // Màu viền trái đậm hơn tương ứng, giúp phân biệt rõ nét từng TDP dù nhìn lướt qua
+    const borderColorsTable = [
+      'border-l-4 border-l-slate-400',
+      'border-l-4 border-l-blue-400',
+      'border-l-4 border-l-amber-400',
+      'border-l-4 border-l-emerald-400',
+      'border-l-4 border-l-purple-400',
+      'border-l-4 border-l-orange-400',
+      'border-l-4 border-l-teal-400',
+      'border-l-4 border-l-rose-400',
+      'border-l-4 border-l-indigo-400',
+      'border-l-4 border-l-lime-400'
+    ];
+
+    // ----- TĂNG TỐC HIỂN THỊ DỮ LIỆU (cache tạm ở trình duyệt) -----
+    // Ý tưởng: lần đầu tải xong sẽ lưu tạm dữ liệu vào localStorage. Những lần vào lại sau,
+    // trang hiển thị NGAY dữ liệu cũ đã lưu (không cần chờ mạng) rồi mới âm thầm gọi Sheet
+    // ở phía sau để lấy bản mới nhất và cập nhật lại nếu có gì thay đổi. Nhờ vậy cảm giác
+    // "vào là thấy danh sách ngay" thay vì phải chờ quay vòng loading mỗi lần.
+    const CACHE_KEY = 'clb_members_internal_cache_v1';
+
+    // ----- LỌC TRÙNG THÀNH VIÊN THEO SỐ CCCD (giữ lần đăng ký CUỐI CÙNG) -----
+    // Khi thành viên đăng ký lại (form mới) để bổ sung/cập nhật thông tin còn thiếu,
+    // dữ liệu mới sẽ được thêm vào CUỐI danh sách gốc (đúng thứ tự các lượt trả lời form).
+    // Nếu 2 (hay nhiều) lượt đăng ký có cùng số CCCD, ta chỉ giữ lại lượt đăng ký
+    // CUỐI CÙNG (mới nhất, đầy đủ nhất) và bỏ qua các lượt trùng trước đó.
+    // Những thành viên chưa có/không có CCCD thì KHÔNG bị coi là trùng nhau.
+    function extractCCCDNumber(raw) {
+      if (!raw) return '';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '';
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      return number || '';
+    }
+
+    function dedupeByLatestCCCD(list) {
+      // Bước 1: với mỗi số CCCD, tìm vị trí (index) xuất hiện CUỐI CÙNG trong danh sách gốc
+      const lastIndexByCCCD = new Map();
+      list.forEach((item, idx) => {
+        const num = extractCCCDNumber(item.cccd);
+        if (num) lastIndexByCCCD.set(num, idx);
+      });
+      // Bước 2: chỉ giữ lại phần tử nào là lượt xuất hiện cuối cùng của CCCD đó
+      // (thành viên không có CCCD luôn được giữ lại, vì không có cơ sở để xác định trùng)
+      return list.filter((item, idx) => {
+        const num = extractCCCDNumber(item.cccd);
+        if (!num) return true;
+        return lastIndexByCCCD.get(num) === idx;
+      });
+    }
+
+    function showMembers(list) {
+      allMembers = dedupeByLatestCCCD(list);
+      document.getElementById('total-count').innerText = allMembers.length;
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('table-container-desktop').style.display = '';
+      document.getElementById('cards-header').style.display = '';
+      document.getElementById('cards-container').style.display = '';
+      sortAndRender(allMembers);
+    }
+
+    function fetchFreshData() {
+      return fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+          showMembers(data);
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const printDateEl = document.getElementById('print-date');
+      if (printDateEl) printDateEl.innerText = 'Ngày xuất: ' + new Date().toLocaleString('vi-VN');
+
+      let hasCache = false;
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          showMembers(JSON.parse(cached));
+          hasCache = true;
+        }
+      } catch (e) {}
+
+      // Luôn gọi lấy dữ liệu mới nhất từ Sheet (dù đã có cache hay chưa) để đảm bảo chính xác
+      fetchFreshData().catch(err => {
+        console.error(err);
+        if (!hasCache) {
+          document.getElementById('loading').innerHTML = `
+            <div class="text-red-500 px-4">
+              <i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>
+              <p class="text-sm font-semibold">Lỗi kết nối API Google Sheets. Vui lòng kiểm tra lại link hoặc cấu quyền Anyone!</p>
+            </div>
+          `;
+        }
+      });
+    });
+
+    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần, trong đó Leader phụ trách
+    // tổ dân phố đó luôn được xếp đứng đầu danh sách của tổ mình.
+    // Thứ tự ưu tiên giới tính trong cùng 1 tổ: Nữ đứng thành khối trước, Nam đứng thành khối sau.
+    // (Muốn đổi thứ tự ngược lại - Nam trước, Nữ sau - chỉ cần đảo 2 dòng bên trong object này)
+    const GENDER_ORDER = { 'nữ': 0, 'nam': 1 };
+    function genderRank(item) {
+      const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+      // Giới tính không xác định/khác được xếp ở cuối cùng, sau cả 2 khối Nam/Nữ
+      return g in GENDER_ORDER ? GENDER_ORDER[g] : 2;
+    }
+
+    // Danh sách đã sắp xếp hiện đang hiển thị (dùng chung cho bảng web + xuất Excel,
+    // để Excel luôn khớp với đúng những gì đang thấy trên web, kể cả khi đang lọc tìm kiếm)
+    let currentSortedList = [];
+
+    // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần
+    function sortMembers(list) {
+      return [...list].sort((a, b) => {
+        const tdpA = a.toDanPho || '';
+        const tdpB = b.toDanPho || '';
+        const tdpCompare = tdpA.localeCompare(tdpB, 'vi', { numeric: true, sensitivity: 'base' });
+        if (tdpCompare !== 0) return tdpCompare;
+        // Cùng 1 tổ dân phố: Leader (nếu có) đứng đầu
+        const leaderCompare = (isLeader(a) ? 0 : 1) - (isLeader(b) ? 0 : 1);
+        if (leaderCompare !== 0) return leaderCompare;
+        // Sau Leader: gom thành viên theo giới tính để Nữ đứng cạnh Nữ, Nam đứng cạnh Nam
+        return genderRank(a) - genderRank(b);
+      });
+    }
+
+    function sortAndRender(list) {
+      const sortedList = sortMembers(list);
+      currentSortedList = sortedList;
+      renderData(sortedList);
+    }
+
+    function renderData(list) {
+      const tbody = document.getElementById('table-body');
+      const cardsContainer = document.getElementById('cards-container');
+      const noResult = document.getElementById('no-result');
+
+      tbody.innerHTML = '';
+      cardsContainer.innerHTML = '';
+
+      if (list.length === 0) {
+        noResult.classList.remove('hidden');
+        return;
+      }
+      noResult.classList.add('hidden');
+
+      // Tạo bản đồ ánh xạ để gán màu cố định cho từng TDP xuất hiện trong danh sách
+      const tdpColorMap = {};
+      let colorIndex = 0;
+
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        if (!(key in tdpColorMap)) {
+          tdpColorMap[key] = colorIndex % bgColorsTable.length;
+          colorIndex++;
+        }
+      });
+
+      // Đếm tổng số thành viên của từng Tổ dân phố, để hiển thị ngay trên dòng tiêu đề nhóm
+      // (vd: "TỔ DÂN PHỐ THƯỢNG CÁT 2" — "Thành viên: 20 | Nam: 16 - Nữ: 4")
+      const tdpCountMap = {};
+      const tdpGenderCountMap = {}; // { [tdpKey]: { nam: number, nu: number } }
+      list.forEach((item) => {
+        const key = item.toDanPho || 'Trống';
+        tdpCountMap[key] = (tdpCountMap[key] || 0) + 1;
+
+        if (!tdpGenderCountMap[key]) tdpGenderCountMap[key] = { nam: 0, nu: 0 };
+        const g = (item.gioiTinh || '').toString().trim().toLowerCase();
+        if (g === 'nam') tdpGenderCountMap[key].nam++;
+        else if (g === 'nữ' || g === 'nu') tdpGenderCountMap[key].nu++;
+      });
+
+      let lastTdpKeyForStt = null;
+      let sttInGroup = 0;
+
+      list.forEach((item, index) => {
+        const currentTdpKey = item.toDanPho || 'Trống';
+        const colorIdx = tdpColorMap[currentTdpKey];
+        const assignedBgStyle = bgColorsTable[colorIdx];
+        const assignedBorderStyle = borderColorsTable[colorIdx];
+
+        // STT hiển thị tính riêng theo từng Tổ dân phố (reset về 1 khi sang tổ khác),
+        // giống cách hiển thị của bản public.
+        const isNewGroup = currentTdpKey !== lastTdpKeyForStt;
+        if (isNewGroup) {
+          lastTdpKeyForStt = currentTdpKey;
+          sttInGroup = 0;
+        }
+        sttInGroup++;
+        const displayStt = sttInGroup;
+
+        // Khi bắt đầu 1 Tổ dân phố mới: chèn 1 hàng/khối tiêu đề riêng, gồm 2 dòng:
+        // Dòng 1: "TỔ DÂN PHỐ THƯỢNG CÁT 2"
+        // Dòng 2: "Thành viên: 20  |  Nam: 16  -  Nữ: 4"
+        if (isNewGroup) {
+          const groupCount = tdpCountMap[currentTdpKey] || 0;
+          const genderCount = tdpGenderCountMap[currentTdpKey] || { nam: 0, nu: 0 };
+          const groupTitle = `TỔ DÂN PHỐ ${formatTDP(item.toDanPho).toUpperCase()}`;
+          const groupStatsLine = `Thành viên: ${groupCount}&nbsp;&nbsp;|&nbsp;&nbsp;Nam: ${genderCount.nam}&nbsp;&nbsp;-&nbsp;&nbsp;Nữ: ${genderCount.nu}`;
+          const groupHeaderHtml = `
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-house-chimney text-base md:text-lg"></i>
+              <span class="text-base md:text-lg">${groupTitle}</span>
+            </div>
+            <div class="pl-6 mt-0.5 font-semibold normal-case tracking-normal text-red-100 text-xs md:text-sm">
+              ${groupStatsLine}
+            </div>
+          `;
+
+          const trGroup = document.createElement('tr');
+          trGroup.innerHTML = `
+            <td colspan="15" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
+              ${groupHeaderHtml}
+            </td>
+          `;
+          tbody.appendChild(trGroup);
+
+          const cardGroup = document.createElement('div');
+          cardGroup.className = 'py-2.5 px-4 bg-red-700 text-white font-bold tracking-wide';
+          cardGroup.innerHTML = groupHeaderHtml;
+          cardsContainer.appendChild(cardGroup);
+        }
+
+        // 1. Giao diện bảng Desktop
+        const tr = document.createElement('tr');
+        tr.className = `${assignedBgStyle} ${assignedBorderStyle} transition-colors`;
+        tr.innerHTML = `
+          <td class="py-2 px-1.5 text-center align-top text-black font-normal border-r border-gray-100/50">${displayStt}</td>
+          <td class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${displayName(item)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.sizeAo || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
+          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
+          <td class="py-2 px-1.5 text-center align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDPShort(item.toDanPho)}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.diaChi || '---'}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
+          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${item.camKet ? 'Cam kết' : '---'}</td>
+          <td class="py-2 px-1.5 text-center align-top no-print">
+            <button type="button" onclick="openEditModal(${item.rowIndex})" class="text-red-700 hover:text-white hover:bg-red-700 border border-red-200 rounded-lg w-8 h-8 inline-flex items-center justify-center transition-colors cursor-pointer" title="Sửa thành viên">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+
+        // 2. Giao diện dạng thẻ Mobile — hiển thị ĐẦY ĐỦ thông tin (bản nội bộ) dạng danh sách nhãn:giá trị
+        const card = document.createElement('div');
+        card.className = `p-4 ${assignedBgStyle} ${assignedBorderStyle} border-b border-gray-100 transition-all`;
+        card.innerHTML = `
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs bg-black/5 text-black font-normal w-5 h-5 rounded-full inline-flex items-center justify-center shrink-0">${displayStt}</span>
+            <h4 class="font-bold text-gray-900 text-base truncate flex-1">${displayName(item)}</h4>
+            <button type="button" onclick="openEditModal(${item.rowIndex})" class="text-red-700 hover:text-white hover:bg-red-700 border border-red-200 rounded-lg w-8 h-8 inline-flex items-center justify-center shrink-0 transition-colors cursor-pointer" title="Sửa thành viên">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+          </div>
+          <div class="pl-7 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
+            <p><span class="text-gray-400">DOB:</span> <strong class="text-gray-800">${formatNgaySinh(item.ngaySinh)}</strong></p>
+            <p><span class="text-gray-400">GT:</span> <strong class="text-gray-800">${item.gioiTinh || '---'}</strong></p>
+            <p><span class="text-gray-400">Cao/Nặng:</span> <strong class="text-gray-800">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</strong></p>
+            <p><span class="text-gray-400">Size áo:</span> <strong class="text-gray-800">${item.sizeAo || '---'}</strong></p>
+            <p><span class="text-gray-400">Tay thuận:</span> ${tayThuanBadge(item.tayThuan)}</p>
+            <p><span class="text-gray-400">CCCD:</span> <strong class="text-gray-800">${formatCCCD(item.cccd)}</strong></p>
+            <p><span class="text-gray-400">SĐT:</span> <a href="tel:${item.rawPhone}" class="font-semibold text-gray-800">${formatPhone(item.rawPhone)}</a></p>
+            <p class="col-span-2"><span class="text-gray-400">TDP:</span> <strong class="text-gray-800">${formatTDPShort(item.toDanPho)}</strong></p>
+            <p class="col-span-2"><span class="text-gray-400">Địa chỉ:</span> <strong class="text-gray-800">${item.diaChi || '---'}</strong></p>
+            <p class="col-span-2"><span class="text-gray-400">Kinh nghiệm:</span> ${item.kinhNghiem || '---'}</p>
+            <p class="col-span-2"><span class="text-gray-400">Công việc:</span> ${item.congViec || '---'}</p>
+            <p class="col-span-2"><span class="text-gray-400">Cam kết:</span> <strong class="text-gray-800">${item.camKet ? 'Cam kết' : '---'}</strong></p>
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    // Danh sách 4 số cuối SĐT của các Leader CLB — dùng để tự động gắn icon Leader trước tên
+    // trong danh sách, dù là SĐT thật (bản nội bộ) hay SĐT đã che (bản public) vẫn nhận diện được.
+    const LEADER_PHONE_LAST4 = ['7993', '2534', '1918']; // Văn Mạnh, Hoàng Ngô, Bá Tuyên
+    function isLeader(item) {
+      const phone = (item.rawPhone || item.maskedPhone || '').toString();
+      return LEADER_PHONE_LAST4.includes(phone.slice(-4));
+    }
+    function leaderBadge(item) {
+      return isLeader(item)
+        ? '<i class="fa-solid fa-shield-halved text-amber-500 ml-1.5" title="Leader CLB"></i>'
+        : '';
+    }
+    // Chuẩn hóa tên về kiểu "Chữ Hoa Đầu Từ, còn lại chữ thường" (Title Case tiếng Việt),
+    // áp dụng cho tất cả thành viên KHÔNG phải Leader — để không bị lệ thuộc vào cách
+    // Leader tuyển quân gõ tên trong Google Sheet (viết hoa hết, viết thường hết, lẫn lộn...).
+    // Ví dụ: "NGUYỄN THỊ THÚY" -> "Nguyễn Thị Thúy" ; "nguyễn văn Long" -> "Nguyễn Văn Long"
+    function toVietnameseTitleCase(raw) {
+      if (!raw) return raw;
+      return raw.toString().trim().toLowerCase()
+        .replace(/([^\s-]+)/g, (word) => word.charAt(0).toUpperCase() + word.slice(1));
+    }
+    // Tên hiển thị: nếu là Leader thì viết HOA toàn bộ tên và icon nằm ở CUỐI tên,
+    // còn lại (thành viên thường) luôn chuẩn hóa về kiểu Title Case cho đồng nhất
+    function displayName(item) {
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : toVietnameseTitleCase(item.hoTen);
+      return `${name}${leaderBadge(item)}`;
+    }
+
+
+    // Kết quả trả về dạng HTML 2 dòng: dòng 1 là số CCCD (in đậm), dòng 2 là ngày cấp (nếu có).
+    function formatCCCD(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+
+      // 1. Tìm ngày cấp dạng d/M/yyyy hoặc dd/mm/yyyy trong chuỗi
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+
+      // 2. Bỏ phần ngày cấp ra khỏi chuỗi, phần còn lại tìm dãy số dài nhất chính là số CCCD
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+
+      if (!number && !date) return '---';
+
+      let result = '';
+      if (number) result += `<strong class="font-bold">${number}</strong>`;
+      if (date) result += (result ? '<br>' : '') + date;
+      return result;
+    }
+
+    // Tách chuỗi thô "Chiều cao - Cân nặng" thành 2 phần riêng: chiều cao (dạng 1m64, 165cm...)
+    // và cân nặng (dạng 88kg), bỏ hết dấu câu/ký tự thừa (-, ~, /, khoảng...).
+    // Trả về { heightPart, weightPart, raw } — raw dùng khi không nhận diện được gì cả.
+    function parseChieuCaoCanNang(raw) {
+      if (!raw) return null;
+      const str = raw.toString().trim();
+      if (!str || str === '---') return null;
+
+      // 1. Chiều cao dạng "1m64", "1 m 64", "1,64m", "1.64m"
+      let height = '';
+      let m = str.match(/(\d)\s*m\s*(\d{1,2})/i);
+      if (m) {
+        height = `${m[1]}m${m[2].padStart(2, '0')}`;
+      } else {
+        m = str.match(/(\d)[.,](\d{2})\s*m/i);
+        if (m) height = `${m[1]}m${m[2]}`;
+        else {
+          // Hoặc chiều cao dạng "165cm" / "165 cm"
+          m = str.match(/(\d{2,3})\s*cm/i);
+          if (m) height = `${m[1]}cm`;
+        }
+      }
+
+      // 2. Cân nặng dạng "88kg", "88 kg", "88.5kg"
+      let weight = '';
+      m = str.match(/(\d{2,3}(?:[.,]\d{1,2})?)\s*kg/i);
+      if (m) weight = `${m[1]}kg`;
+
+      if (!height && !weight) return { heightPart: null, weightPart: null, raw: str };
+
+      // Luôn hiển thị đủ 2 vế Chiều cao / Cân nặng. Nếu thiếu 1 trong 2, hiển thị
+      // placeholder rõ ràng thay vì bỏ trống, tránh gây hiểu lầm là thiếu dữ liệu:
+      // - Thiếu chiều cao -> "---"       - Thiếu cân nặng -> "---kg"
+      return { heightPart: height || '---', weightPart: weight || '---kg', raw: str };
+    }
+
+    // Bản dùng cho Excel (văn bản thuần, 1 dòng, cách nhau bằng dấu " / ")
+    // Vd: "1m64-~88kg" -> "1m64 / 88kg"
+    function formatChieuCaoCanNang(raw) {
+      const parsed = parseChieuCaoCanNang(raw);
+      if (!parsed) return '---';
+      if (!parsed.heightPart) return parsed.raw; // không nhận diện được gì -> giữ nguyên chuỗi gốc
+      return `${parsed.heightPart} / ${parsed.weightPart}`;
+    }
+
+    // Bản dùng cho hiển thị trên web & khi in/PDF: xuống dòng, KHÔNG dùng dấu "/".
+    // Vd: 1m65
+    //     59kg
+    function formatChieuCaoCanNangHTML(raw) {
+      const parsed = parseChieuCaoCanNang(raw);
+      if (!parsed) return '---';
+      if (!parsed.heightPart) return parsed.raw; // không nhận diện được gì -> giữ nguyên chuỗi gốc
+      return `${parsed.heightPart}<br>${parsed.weightPart}`;
+    }
+
+
+    function formatPhone(raw) {
+      if (!raw) return '---';
+      const digits = raw.toString().replace(/\D/g, '');
+      if (!digits) return '---';
+      if (digits.length === 10) {
+        return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7)}`;
+      }
+      // Số không đủ 10 chữ số: vẫn cố gắng nhóm 4-3-3 theo cùng quy tắc
+      return digits.replace(/(\d{4})(\d{3})(\d+)/, '$1 $2 $3');
+    }
+
+    // Rút gọn giá trị Tổ dân phố: bỏ chữ "TDP" (hoặc "Tổ dân phố") ở đầu nếu có,
+    // chỉ giữ lại phần tên khu vực, vd: "TDP Thượng Cát 1" -> "Thượng Cát 1"
+    function formatTDP(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+      const cleaned = str.replace(/^(TDP|Tổ\s*dân\s*phố)[\s.:\-]*/i, '').trim();
+      return cleaned || str;
+    }
+
+    // Rút gọn thêm 1 bước nữa cho GỌN Ở CỘT "TDP" trong bảng (không dùng cho dòng tiêu đề
+    // nhóm to — dòng đó vẫn hiện đầy đủ): viết tắt từ đầu tiên thành 1 chữ cái + dấu chấm,
+    // dính liền từ tiếp theo. Vd: "Thượng Cát 1" -> "T.Cát 1"
+    function formatTDPShort(raw) {
+      const cleaned = formatTDP(raw);
+      if (!cleaned || cleaned === '---') return cleaned;
+      const words = cleaned.split(/\s+/);
+      if (words.length <= 1) return cleaned;
+      const abbrev = words[0].charAt(0).toUpperCase() + '.';
+      return `${abbrev}${words.slice(1).join(' ')}`;
+    }
+
+    // Chuyển ngày sinh về đúng định dạng "ngày/tháng/năm" (vd: 26/6/1995), bất kể dữ liệu
+    // từ Apps Script trả về ở dạng nào: dd/MM/yyyy có sẵn, ISO (yyyy-MM-dd...), hay dạng
+    // chuỗi Date thô của JavaScript (vd: "Mon Jun 26 1995 00:00:00 GMT+0700 (Giờ Đông Dương)").
+    function formatNgaySinh(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+
+      // 1. Đã ở dạng d/M/yyyy hoặc dd/MM/yyyy
+      let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m) return `${parseInt(m[1], 10)}/${parseInt(m[2], 10)}/${m[3]}`;
+
+      // 2. Dạng ISO: yyyy-MM-dd...
+      m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return `${parseInt(m[3], 10)}/${parseInt(m[2], 10)}/${m[1]}`;
+
+      // 3. Dạng chuỗi Date tiếng Anh thô: "Mon Jun 26 1995 00:00:00 GMT+0700 ..."
+      const monthMap = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+      m = str.match(/^\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{4})/);
+      if (m && monthMap[m[1]]) return `${parseInt(m[2], 10)}/${monthMap[m[1]]}/${m[3]}`;
+
+      // 4. Trường hợp khác: nhờ trình duyệt tự nhận diện
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+
+      return str;
+    }
+
+    // Chuyển ngày dạng "d/M/yyyy" hoặc "dd/MM/yyyy" sang "yyyy-mm-dd" để đổ vào <input type="date">
+    function toISODateForInput(raw) {
+      if (!raw) return '';
+      const str = raw.toString().trim();
+      const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m) {
+        const dd = m[1].padStart(2, '0');
+        const mm = m[2].padStart(2, '0');
+        return `${m[3]}-${mm}-${dd}`;
+      }
+      // Thử để trình duyệt tự nhận diện các định dạng khác
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        const yyyy = d.getFullYear();
+        const mm2 = (d.getMonth() + 1).toString().padStart(2, '0');
+        const dd2 = d.getDate().toString().padStart(2, '0');
+        return `${yyyy}-${mm2}-${dd2}`;
+      }
+      return '';
+    }
+
+    // ===== NHẬN DIỆN NHANH "TAY THUẬN" BẰNG MÀU SẮC + ICON =====
+    // Phân loại giá trị thô trong Sheet (có thể gõ "Trái"/"trái"/"Phải"/"Cả 2 bên"/"2 tay"...)
+    // về 1 trong 3 nhóm: trai / phai / ca2. Nếu không khớp mẫu nào -> "khac" (vẫn hiển thị nguyên văn).
+    function classifyTayThuan(raw) {
+      if (!raw) return null;
+      const norm = raw.toString().trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // bỏ dấu tiếng Việt để so khớp chắc chắn hơn
+      if (!norm || norm === '---') return null;
+      const hasTrai = /\btrai\b/.test(norm);
+      const hasPhai = /\bphai\b/.test(norm);
+      const hasCa2 = /(ca\s*2|ca\s*hai|2\s*ben|2\s*tay|hai\s*tay|hai\s*ben)/.test(norm);
+      if (hasCa2 || (hasTrai && hasPhai)) return 'ca2';
+      if (hasTrai) return 'trai';
+      if (hasPhai) return 'phai';
+      return 'khac';
+    }
+
+    // Màu dùng cho giao diện web (bảng desktop & thẻ mobile) — đã bỏ icon bàn tay, chỉ còn viên màu + chữ
+    const TAY_THUAN_STYLE = {
+      trai: { label: 'Trái',     badgeClass: 'bg-blue-100 text-blue-700 border border-blue-300' },
+      phai: { label: 'Phải',     badgeClass: 'bg-emerald-100 text-emerald-700 border border-emerald-300' },
+      ca2:  { label: 'Cả 2 bên', badgeClass: 'bg-amber-100 text-amber-700 border border-amber-300' },
+      khac: { label: null,       badgeClass: 'bg-gray-100 text-gray-600 border border-gray-300' }
+    };
+
+    // Trả về HTML "viên thuốc" (pill) màu cho cột Tay thuận (không icon)
+    function tayThuanBadge(raw) {
+      const type = classifyTayThuan(raw);
+      if (!type) return '<span class="text-gray-400">---</span>';
+      const cfg = TAY_THUAN_STYLE[type];
+      const label = cfg.label || raw.toString().trim();
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}">${label}</span>`;
+    }
+
+    // Màu (mã hex, không dấu #) + nhãn có ký hiệu mũi tên dùng khi xuất Excel
+    const TAY_THUAN_EXCEL_STYLE = {
+      trai: { fill: 'DBEAFE', font: '1D4ED8', label: '◀ Trái' },
+      phai: { fill: 'D1FAE5', font: '047857', label: 'Phải ▶' },
+      ca2:  { fill: 'FEF3C7', font: 'B45309', label: '⇄ Cả 2 bên' },
+      khac: { fill: 'F3F4F6', font: '4B5563', label: null }
+    };
+
+    function formatTayThuanExcelLabel(raw) {
+      const type = classifyTayThuan(raw);
+      if (!type) return '---';
+      const cfg = TAY_THUAN_EXCEL_STYLE[type];
+      return cfg.label || raw.toString().trim();
+    }
+
+    function filterMembers() {
+      const keyword = document.getElementById('search-input').value.trim().toLowerCase();
+      const removeSign = (str) => {
+        return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "d");
+      };
+      const cleanKeyword = removeSign(keyword);
+
+      const filtered = allMembers.filter(item => {
+        const matchName = removeSign(item.hoTen.toLowerCase()).includes(cleanKeyword);
+        const matchPhone = (item.rawPhone || '').includes(keyword); 
+        return matchName || matchPhone;
+      });
+
+      // Lọc xong vẫn gọi hàm gom nhóm sắp xếp theo TDP
+      sortAndRender(filtered);
+    }
+
+    // ============================================================
+    // ============  THÊM / SỬA / XOÁ THÀNH VIÊN (Modal)  ==========
+    // ============================================================
+    // Ghi thẳng vào Google Sheet gốc thông qua Worker (POST) -> Apps Script (doPost).
+    // Mỗi thành viên (bản nội bộ) có kèm "rowIndex" = số dòng thật trong Sheet,
+    // dùng để xác định đúng dòng cần Sửa/Xoá.
+
+    function getMemberByRowIndex(rowIndex) {
+      return allMembers.find(m => Number(m.rowIndex) === Number(rowIndex));
+    }
+
+    function openAddModal() {
+      document.getElementById('member-form').reset();
+      document.getElementById('m-rowIndex').value = '';
+      document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> Thêm thành viên';
+      document.getElementById('member-save-btn-text').innerText = 'Lưu';
+      document.getElementById('member-delete-btn').classList.add('hidden');
+      document.getElementById('member-form-error').classList.add('hidden');
+      showMemberModal();
+    }
+
+    function openEditModal(rowIndex) {
+      const item = getMemberByRowIndex(rowIndex);
+      if (!item) {
+        alert('Không tìm thấy thành viên này (có thể danh sách vừa được cập nhật). Vui lòng tải lại trang.');
+        return;
+      }
+
+      document.getElementById('member-form').reset();
+      document.getElementById('m-rowIndex').value = item.rowIndex;
+
+      document.getElementById('m-hoTen').value = item.hoTen || '';
+      document.getElementById('m-ngaySinh').value = toISODateForInput(item.ngaySinh);
+      document.getElementById('m-gioiTinh').value = item.gioiTinh || '';
+      document.getElementById('m-rawPhone').value = item.rawPhone || '';
+      document.getElementById('m-toDanPho').value = item.toDanPho || '';
+
+      const cccdParts = getCCCDParts(item.cccd);
+      document.getElementById('m-cccdSo').value = cccdParts.number || '';
+      document.getElementById('m-cccdNgayCap').value = toISODateForInput(cccdParts.date);
+
+      const hcParsed = parseChieuCaoCanNang(item.chieuCaoCanNang);
+      document.getElementById('m-chieuCao').value = (hcParsed && hcParsed.heightPart && hcParsed.heightPart !== '---') ? hcParsed.heightPart : (hcParsed && !hcParsed.heightPart ? hcParsed.raw : '');
+      document.getElementById('m-canNang').value = (hcParsed && hcParsed.weightPart && hcParsed.weightPart !== '---kg') ? hcParsed.weightPart : '';
+
+      document.getElementById('m-sizeAo').value = item.sizeAo || '';
+      document.getElementById('m-tayThuan').value = item.tayThuan || '';
+      document.getElementById('m-diaChi').value = item.diaChi || '';
+      document.getElementById('m-kinhNghiem').value = item.kinhNghiem || '';
+      document.getElementById('m-congViec').value = item.congViec || '';
+      document.getElementById('m-camKet').checked = !!item.camKet;
+
+      document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Sửa thông tin: ' + item.hoTen;
+      document.getElementById('member-save-btn-text').innerText = 'Lưu thay đổi';
+      document.getElementById('member-delete-btn').classList.remove('hidden');
+      document.getElementById('member-form-error').classList.add('hidden');
+      showMemberModal();
+    }
+
+    function showMemberModal() {
+      const modal = document.getElementById('member-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMemberModal() {
+      const modal = document.getElementById('member-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('member-modal-backdrop').addEventListener('click', closeMemberModal);
+
+    function buildMemberPayloadFromForm() {
+      const cccdSo = document.getElementById('m-cccdSo').value.trim();
+      const cccdNgayCapISO = document.getElementById('m-cccdNgayCap').value;
+
+      // Ghép "Số CCCD - ngày/tháng/năm" giống định dạng gốc trong Sheet
+      let cccd = '';
+      let cccdDateDisplay = '';
+      if (cccdNgayCapISO) {
+        const [yyyy, mm, dd] = cccdNgayCapISO.split('-');
+        cccdDateDisplay = `${parseInt(dd, 10)}/${parseInt(mm, 10)}/${yyyy}`;
+      }
+      cccd = [cccdSo, cccdDateDisplay].filter(Boolean).join(' - ');
+
+      const chieuCao = document.getElementById('m-chieuCao').value.trim();
+      const canNang = document.getElementById('m-canNang').value.trim();
+      const chieuCaoCanNang = [chieuCao, canNang].filter(Boolean).join(' - ');
+
+      return {
+        hoTen: document.getElementById('m-hoTen').value.trim(),
+        ngaySinh: document.getElementById('m-ngaySinh').value, // yyyy-mm-dd, Apps Script sẽ tự parse
+        gioiTinh: document.getElementById('m-gioiTinh').value,
+        toDanPho: document.getElementById('m-toDanPho').value.trim(),
+        rawPhone: document.getElementById('m-rawPhone').value.trim(),
+        kinhNghiem: document.getElementById('m-kinhNghiem').value.trim(),
+        congViec: document.getElementById('m-congViec').value.trim(),
+        camKet: document.getElementById('m-camKet').checked ? 'Cam kết' : '',
+        cccd: cccd,
+        diaChi: document.getElementById('m-diaChi').value.trim(),
+        chieuCaoCanNang: chieuCaoCanNang,
+        tayThuan: document.getElementById('m-tayThuan').value,
+        sizeAo: document.getElementById('m-sizeAo').value
+      };
+    }
+
+    function setModalSaving(isSaving) {
+      const btn = document.getElementById('member-save-btn');
+      btn.disabled = isSaving;
+      btn.classList.toggle('opacity-60', isSaving);
+      btn.classList.toggle('cursor-not-allowed', isSaving);
+      document.getElementById('member-save-btn-text').innerText = isSaving ? 'Đang lưu...' : (document.getElementById('m-rowIndex').value ? 'Lưu thay đổi' : 'Lưu');
+    }
+
+    function showModalError(msg) {
+      const box = document.getElementById('member-form-error');
+      box.innerText = msg;
+      box.classList.remove('hidden');
+    }
+
+    async function submitMemberForm(evt) {
+      evt.preventDefault();
+      document.getElementById('member-form-error').classList.add('hidden');
+
+      const member = buildMemberPayloadFromForm();
+      if (!member.hoTen) {
+        showModalError('Vui lòng nhập Họ và tên.');
+        return;
+      }
+      if (member.rawPhone && !/^\d{9,11}$/.test(member.rawPhone)) {
+        showModalError('Số điện thoại không hợp lệ (chỉ nhập số, 9-11 chữ số).');
+        return;
+      }
+
+      const rowIndexRaw = document.getElementById('m-rowIndex').value;
+      const isEdit = !!rowIndexRaw;
+      const payload = isEdit
+        ? { action: 'update', rowIndex: rowIndexRaw, member }
+        : { action: 'add', member };
+
+      setModalSaving(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (!result || result.success !== true) {
+          throw new Error((result && result.error) || 'Lưu thất bại, vui lòng thử lại.');
+        }
+        closeMemberModal();
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('table-container-desktop').style.display = 'none';
+        document.getElementById('cards-header').style.display = 'none';
+        document.getElementById('cards-container').style.display = 'none';
+        await fetchFreshData();
+      } catch (err) {
+        console.error(err);
+        showModalError('Lỗi: ' + err.message);
+      } finally {
+        setModalSaving(false);
+      }
+    }
+
+    async function deleteMemberFromModal() {
+      const rowIndex = document.getElementById('m-rowIndex').value;
+      if (!rowIndex) return;
+      const item = getMemberByRowIndex(rowIndex);
+      const name = item ? item.hoTen : 'thành viên này';
+      if (!confirm(`Xoá "${name}" khỏi danh sách? Hành động này KHÔNG thể hoàn tác.`)) return;
+
+      setModalSaving(true);
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', rowIndex })
+        });
+        const result = await res.json();
+        if (!result || result.success !== true) {
+          throw new Error((result && result.error) || 'Xoá thất bại, vui lòng thử lại.');
+        }
+        closeMemberModal();
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('table-container-desktop').style.display = 'none';
+        document.getElementById('cards-header').style.display = 'none';
+        document.getElementById('cards-container').style.display = 'none';
+        await fetchFreshData();
+      } catch (err) {
+        console.error(err);
+        showModalError('Lỗi: ' + err.message);
+      } finally {
+        setModalSaving(false);
+      }
+    }
+
+    // ============================================================
+    // ===================  XUẤT FILE EXCEL  =====================
+    // ============================================================
+    // Yêu cầu: (1) đầu mục cột giống hệt bảng trên web, (2) KHÔNG chèn dòng
+    // phân tách "TỔ DÂN PHỐ ..." như trên web/bản in, (3) số thứ tự (STT)
+    // chạy liên tục từ 1 tới hết toàn bộ danh sách (không reset theo từng tổ),
+    // (4) trình bày đẹp, hiện đại: có tiêu đề, màu theo tổ dân phố, viền, bo,
+    // căn giữa/căn lề hợp lý, tự co giãn độ rộng cột.
+
+    // Tên hiển thị dạng CHỮ THƯỜNG (không icon) cho Excel — Leader được đánh dấu bằng ★
+    function displayNamePlain(item) {
+      const name = isLeader(item) ? item.hoTen.toUpperCase() : toVietnameseTitleCase(item.hoTen);
+      return isLeader(item) ? `★ ${name}` : name;
+    }
+
+    // Bản CCCD dạng văn bản thuần (không chứa thẻ HTML), số và ngày cấp cách nhau bằng xuống dòng
+    function formatCCCDPlain(raw) {
+      if (!raw) return '---';
+      const str = raw.toString().trim();
+      if (!str || str === '---') return '---';
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      if (!number && !date) return '---';
+      return [number, date].filter(Boolean).join('\n');
+    }
+
+    // Tách riêng "số CCCD" và "ngày cấp" (dùng để xuất thành 2 cột riêng trong Excel,
+    // giúp có thể bôi đậm đúng số CCCD mà không ảnh hưởng tới ngày cấp).
+    function getCCCDParts(raw) {
+      if (!raw) return { number: '', date: '' };
+      const str = raw.toString().trim();
+      if (!str || str === '---') return { number: '', date: '' };
+      const dateMatch = str.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      const withoutDate = date ? str.replace(date, ' ') : str;
+      const numberGroups = withoutDate.match(/\d+/g) || [];
+      const number = numberGroups.reduce((longest, cur) => cur.length > longest.length ? cur : longest, '');
+      return { number, date };
+    }
+
+    // Bảng màu nền (mã HEX) theo từng Tổ dân phố — tương ứng với bgColorsTable dùng trên web,
+    // giúp file Excel vẫn phân biệt trực quan từng tổ dù đã bỏ dòng tiêu đề phân tách.
+    const tdpColorHexTable = [
+      'F1F5F9', // slate-100
+      'DBEAFE', // blue-100
+      'FEF3C7', // amber-100
+      'D1FAE5', // emerald-100
+      'F3E8FF', // purple-100
+      'FFEDD5', // orange-100
+      'CCFBF1', // teal-100
+      'FFE4E6', // rose-100
+      'E0E7FF', // indigo-100
+      'ECFCCB'  // lime-100
+    ];
+
+    const EXCEL_HEADERS = [
+      'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Size áo', 'Tay thuận',
+      'Số CCCD', 'Ngày cấp', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
+    ];
+    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 15 cột -> cột cuối là "O"
+    const EXCEL_LAST_COL_LETTER = 'O';
+
+    function thinBorder(colorHex) {
+      const side = { style: 'thin', color: { rgb: colorHex } };
+      return { top: side, bottom: side, left: side, right: side };
+    }
+
+    function exportToExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert('Không tải được thư viện xuất Excel. Vui lòng kiểm tra kết nối mạng rồi thử lại.');
+        return;
+      }
+      // Xuất đúng danh sách đang hiển thị trên web hiện tại (đã áp dụng tìm kiếm/lọc nếu có),
+      // đã sắp xếp theo Tổ dân phố, nhưng KHÔNG có dòng tiêu đề phân tách từng tổ.
+      const list = currentSortedList;
+      if (!list || list.length === 0) {
+        alert('Không có dữ liệu để xuất Excel!');
+        return;
+      }
+
+      // Gán màu cố định cho từng Tổ dân phố theo đúng thứ tự xuất hiện (giống bảng web)
+      const tdpColorMap = {};
+      let colorIdx = 0;
+      list.forEach(item => {
+        const key = item.toDanPho || 'Trống';
+        if (!(key in tdpColorMap)) {
+          tdpColorMap[key] = colorIdx % tdpColorHexTable.length;
+          colorIdx++;
+        }
+      });
+
+      // ---- Xây dữ liệu dạng mảng 2 chiều (AOA) ----
+      // Tiêu đề viết hoa chữ cái đầu (không viết hoa toàn bộ), độ nổi bật đến từ
+      // cỡ chữ lớn + nền đỏ đậm + chữ trắng đậm thay vì "hét" bằng chữ hoa toàn bộ.
+      const titleRow1 = ['CÂU LẠC BỘ THUYỀN RỒNG - ĐÌNH THƯỢNG CÁT'];
+      const titleRow2 = ['DANH SÁCH THÀNH VIÊN'];
+      const dateRow = ['Ngày xuất: ' + new Date().toLocaleString('vi-VN') + '   |   Tổng số: ' + list.length + ' thành viên   |   Copyright by LangBenSong '];
+
+      const dataRows = list.map((item, idx) => {
+        const cccdParts = getCCCDParts(item.cccd);
+        return [
+          idx + 1, // STT chạy liên tục từ đầu tới cuối
+          displayNamePlain(item),
+          formatNgaySinh(item.ngaySinh),
+          item.gioiTinh || '---',
+          formatChieuCaoCanNang(item.chieuCaoCanNang),
+          item.sizeAo || '---',
+          formatTayThuanExcelLabel(item.tayThuan),
+          cccdParts.number || '---',
+          cccdParts.date || '---',
+          formatPhone(item.rawPhone),
+          formatTDP(item.toDanPho),
+          item.diaChi || '---',
+          item.kinhNghiem || '---',
+          item.congViec || '---',
+          item.camKet ? 'Cam kết' : '---'
+        ];
+      });
+
+      const HEADER_ROW_INDEX = 3; // sau 3 dòng tiêu đề (0,1,2) -> header ở dòng 4 (index 3)
+      const DATA_START_INDEX = HEADER_ROW_INDEX + 1;
+
+      const aoa = [titleRow1, titleRow2, dateRow, EXCEL_HEADERS, ...dataRows];
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+      // ---- Gộp ô cho 3 dòng tiêu đề ----
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: EXCEL_COL_COUNT - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: EXCEL_COL_COUNT - 1 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: EXCEL_COL_COUNT - 1 } }
+      ];
+
+      // ---- Độ rộng từng cột: nới rộng hơn hẳn so với bản trước, đặc biệt các cột
+      // chứa thông tin dài (Họ và tên, Địa chỉ, Kinh nghiệm, Công việc, CCCD, TDP)
+      // để chữ không bị dồn/lấp và dễ đọc hơn.
+      const COL_WCH = [8, 26, 13, 10, 13, 10, 11, 14, 12, 16, 20, 34, 28, 28, 12];
+      ws['!cols'] = COL_WCH.map(wch => ({ wch }));
+
+      // ---- Chiều cao dòng: tính ĐỘNG theo độ dài nội dung từng dòng, đảm bảo đủ chỗ
+      // hiển thị TOÀN BỘ chữ khi bật wrapText (không bị cắt/lấp chữ), thay vì đặt cố định.
+      // Số ký tự vừa 1 dòng trong 1 cột ước lượng ~ (độ rộng cột wch) ký tự Excel dùng font Calibri.
+      function estimateWrappedLines(text, wch) {
+        if (!text && text !== 0) return 1;
+        const str = text.toString();
+        if (!str) return 1;
+        const usableChars = Math.max(4, wch - 2); // trừ hao phần đệm 2 bên ô
+        // Tôn trọng cả các dòng đã xuống dòng sẵn (vd CCCD có "\n" giữa số và ngày cấp)
+        return str.split('\n').reduce((total, segment) => {
+          return total + Math.max(1, Math.ceil(segment.length / usableChars));
+        }, 0);
+      }
+
+      const WRAP_COLS = [1, 10, 11, 12, 13]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc
+      const LINE_HEIGHT_PT = 15;   // chiều cao 1 dòng chữ (pt), tương ứng cỡ chữ ~10.5
+      const ROW_PADDING_PT = 8;    // đệm trên dưới cho thoáng, dễ nhìn
+      const MIN_DATA_ROW_HPT = 26; // chiều cao tối thiểu mỗi dòng dữ liệu (rộng rãi hơn bản cũ)
+      const MAX_DATA_ROW_HPT = 220; // chặn trần để tránh 1 dòng lỗi dữ liệu kéo quá cao
+
+      ws['!rows'] = [];
+      ws['!rows'][0] = { hpt: 30 };
+      ws['!rows'][1] = { hpt: 22 };
+      ws['!rows'][2] = { hpt: 18 };
+      ws['!rows'][HEADER_ROW_INDEX] = { hpt: 30 };
+
+      dataRows.forEach((rowValues, idx) => {
+        let maxLines = 1;
+        WRAP_COLS.forEach(c => {
+          const lines = estimateWrappedLines(rowValues[c], COL_WCH[c]);
+          if (lines > maxLines) maxLines = lines;
+        });
+        const computedHeight = Math.min(
+          MAX_DATA_ROW_HPT,
+          Math.max(MIN_DATA_ROW_HPT, maxLines * LINE_HEIGHT_PT + ROW_PADDING_PT)
+        );
+        ws['!rows'][DATA_START_INDEX + idx] = { hpt: computedHeight };
+      });
+
+      // ---- Bật bộ lọc tự động ngay trên dòng tiêu đề cột ----
+      ws['!autofilter'] = {
+        ref: `A${HEADER_ROW_INDEX + 1}:${EXCEL_LAST_COL_LETTER}${HEADER_ROW_INDEX + 1}`
+      };
+
+      // ---- Cố định (freeze) phần tiêu đề khi cuộn ----
+      ws['!freeze'] = { xSplit: 0, ySplit: HEADER_ROW_INDEX + 1 };
+      ws['!sheetViews'] = [{ state: 'frozen', xSplit: 0, ySplit: HEADER_ROW_INDEX + 1, topLeftCell: `A${HEADER_ROW_INDEX + 2}` }];
+
+      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 9, 14]); // STT, DOB, GT, Cao/Nặng, Size áo, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết
+
+      // ---- Style dòng tiêu đề CLB (dòng 1-2) ----
+      ['A1', 'A2'].forEach((addr, i) => {
+        if (!ws[addr]) return;
+        ws[addr].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: i === 0 ? 16 : 12, name: 'Calibri' },
+          fill: { fgColor: { rgb: 'B91C1C' } },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      });
+      if (ws['A3']) {
+        ws['A3'].s = {
+          font: { italic: true, color: { rgb: '6B7280' }, sz: 10, name: 'Calibri' },
+          fill: { fgColor: { rgb: 'FFF7ED' } },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      }
+
+      // ---- Style dòng tiêu đề cột (header bảng) ----
+      for (let c = 0; c < EXCEL_COL_COUNT; c++) {
+        const addr = XLSX.utils.encode_cell({ r: HEADER_ROW_INDEX, c });
+        if (!ws[addr]) continue;
+        ws[addr].s = {
+          font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11, name: 'Calibri' },
+          fill: { fgColor: { rgb: '991B1B' } },
+          alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+          border: thinBorder('7F1D1D')
+        };
+      }
+
+      // ---- Style từng ô dữ liệu ----
+      list.forEach((item, rIdx) => {
+        const rowIndexInSheet = DATA_START_INDEX + rIdx;
+        const key = item.toDanPho || 'Trống';
+        const colorHex = tdpColorHexTable[tdpColorMap[key]];
+
+        for (let c = 0; c < EXCEL_COL_COUNT; c++) {
+          const addr = XLSX.utils.encode_cell({ r: rowIndexInSheet, c });
+          if (!ws[addr]) continue;
+
+          // Mặc định: tô theo màu Tổ dân phố như cũ
+          let cellFill = colorHex;
+          let cellFontColor = '1F2937';
+          let cellBold = c === 1;
+
+          // Riêng cột "Số CCCD" (c === 7): in đậm để dễ nhìn. Vì đã tách riêng khỏi
+          // cột "Ngày cấp" (c === 8), việc đậm ở đây không ảnh hưởng tới ngày cấp.
+          if (c === 7) {
+            cellBold = true;
+          }
+
+          // Riêng cột "Tay thuận" (c === 6): tô màu + in đậm riêng theo Trái/Phải/Cả 2 bên
+          // để nhìn vào là biết ngay, không lẫn với màu Tổ dân phố của cả hàng.
+          if (c === 6) {
+            const type = classifyTayThuan(item.tayThuan);
+            if (type) {
+              const styleCfg = TAY_THUAN_EXCEL_STYLE[type];
+              cellFill = styleCfg.fill;
+              cellFontColor = styleCfg.font;
+              cellBold = true;
+            }
+          }
+
+          ws[addr].s = {
+            font: { color: { rgb: cellFontColor }, sz: 10.5, name: 'Calibri', bold: cellBold },
+            fill: { fgColor: { rgb: cellFill } },
+            alignment: {
+              horizontal: CENTER_COLS.has(c) ? 'center' : 'left',
+              vertical: 'center',
+              wrapText: true
+            },
+            border: thinBorder('D1D5DB')
+          };
+        }
+      });
+
+      // ---- Xuất file ----
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách thành viên');
+
+      const now = new Date();
+      const pad = (n) => n.toString().padStart(2, '0');
+      const fileName = `DanhSach_ThanhVien_CLB_ThuyenRong_${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+    }
+
+  </script>
+</body>
+</html>
