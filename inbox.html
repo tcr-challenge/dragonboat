@@ -396,7 +396,7 @@
 
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày sinh</label>
-            <input id="m-ngaySinh" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input id="m-ngaySinh" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="20/08/1987" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Giới tính</label>
@@ -422,7 +422,7 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày cấp CCCD</label>
-            <input id="m-cccdNgayCap" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <input id="m-cccdNgayCap" type="text" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="15/03/2021" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
           </div>
 
           <div>
@@ -1020,6 +1020,68 @@
       return str;
     }
 
+    // Chuyển ngày sinh (nhiều định dạng khác nhau từ Apps Script) về đúng "dd/mm/yyyy" có số 0
+    // đứng trước (vd: 07/06/1995), dùng để đổ lại vào Ô NHẬP TAY ngày sinh khi bấm Sửa,
+    // để anh nhìn thấy ngay thông tin đã đăng ký trước đó mà sửa lại, không bị mất/để trống.
+    function toPaddedDateDisplay(raw) {
+      if (!raw) return '';
+      const str = raw.toString().trim();
+
+      let m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m) return `${m[1].padStart(2, '0')}/${m[2].padStart(2, '0')}/${m[3]}`;
+
+      m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+
+      const monthMap = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+      m = str.match(/^\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{4})/);
+      if (m && monthMap[m[1]]) {
+        return `${m[2].padStart(2, '0')}/${monthMap[m[1]].toString().padStart(2, '0')}/${m[3]}`;
+      }
+
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        const dd = d.getDate().toString().padStart(2, '0');
+        const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+        return `${dd}/${mm}/${d.getFullYear()}`;
+      }
+      return '';
+    }
+
+    // Kiểm tra + chuyển ngày sinh do anh TỰ GÕ ở ô "dd/mm/yyyy" (vd: 20/08/1987) sang dạng
+    // "yyyy-mm-dd" để gửi cho Apps Script (giữ đúng định dạng dữ liệu mà hệ thống đang dùng).
+    // Trả về null nếu chuỗi gõ vào không đúng định dạng hoặc không phải ngày có thật
+    // (vd chặn được 31/02/2000, 30/02/2000...).
+    function parseTypedDateToISO(text) {
+      if (!text) return '';
+      const str = text.toString().trim();
+      const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (!m) return null;
+      const dd = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      const yyyy = parseInt(m[3], 10);
+      const testDate = new Date(yyyy, mm - 1, dd);
+      if (testDate.getFullYear() !== yyyy || testDate.getMonth() !== mm - 1 || testDate.getDate() !== dd) {
+        return null;
+      }
+      return `${yyyy}-${mm.toString().padStart(2, '0')}-${dd.toString().padStart(2, '0')}`;
+    }
+
+    // Tự động chèn dấu "/" khi anh gõ số vào ô Ngày sinh, để gõ liền tay không cần tự bấm "/"
+    // (gõ "20081987" sẽ tự hiện thành "20/08/1987").
+    function attachAutoSlashDate(inputEl) {
+      if (!inputEl) return;
+      inputEl.addEventListener('input', function () {
+        const digits = this.value.replace(/\D/g, '').slice(0, 8);
+        let out = digits.slice(0, 2);
+        if (digits.length >= 3) out += '/' + digits.slice(2, 4);
+        if (digits.length >= 5) out += '/' + digits.slice(4, 8);
+        this.value = out;
+      });
+    }
+    attachAutoSlashDate(document.getElementById('m-ngaySinh'));
+    attachAutoSlashDate(document.getElementById('m-cccdNgayCap'));
+
     // Chuyển ngày dạng "d/M/yyyy" hoặc "dd/MM/yyyy" sang "yyyy-mm-dd" để đổ vào <input type="date">
     function toISODateForInput(raw) {
       if (!raw) return '';
@@ -1139,21 +1201,26 @@
       document.getElementById('m-rowIndex').value = item.rowIndex;
 
       document.getElementById('m-hoTen').value = item.hoTen || '';
-      document.getElementById('m-ngaySinh').value = toISODateForInput(item.ngaySinh);
+      document.getElementById('m-ngaySinh').value = toPaddedDateDisplay(item.ngaySinh);
       document.getElementById('m-gioiTinh').value = item.gioiTinh || '';
       document.getElementById('m-rawPhone').value = item.rawPhone || '';
       document.getElementById('m-toDanPho').value = item.toDanPho || '';
 
       const cccdParts = getCCCDParts(item.cccd);
       document.getElementById('m-cccdSo').value = cccdParts.number || '';
-      document.getElementById('m-cccdNgayCap').value = toISODateForInput(cccdParts.date);
+      document.getElementById('m-cccdNgayCap').value = toPaddedDateDisplay(cccdParts.date);
 
       const hcParsed = parseChieuCaoCanNang(item.chieuCaoCanNang);
       document.getElementById('m-chieuCao').value = (hcParsed && hcParsed.heightPart && hcParsed.heightPart !== '---') ? hcParsed.heightPart : (hcParsed && !hcParsed.heightPart ? hcParsed.raw : '');
       document.getElementById('m-canNang').value = (hcParsed && hcParsed.weightPart && hcParsed.weightPart !== '---kg') ? hcParsed.weightPart : '';
 
       document.getElementById('m-sizeAo').value = item.sizeAo || '';
-      document.getElementById('m-tayThuan').value = item.tayThuan || '';
+      const tayThuanType = classifyTayThuan(item.tayThuan);
+      const tayThuanSelectValue = tayThuanType === 'trai' ? 'Trái'
+        : tayThuanType === 'phai' ? 'Phải'
+        : tayThuanType === 'ca2' ? 'Cả 2 bên'
+        : (item.tayThuan || '');
+      document.getElementById('m-tayThuan').value = tayThuanSelectValue;
       document.getElementById('m-diaChi').value = item.diaChi || '';
       document.getElementById('m-kinhNghiem').value = item.kinhNghiem || '';
       document.getElementById('m-congViec').value = item.congViec || '';
@@ -1184,7 +1251,7 @@
 
     function buildMemberPayloadFromForm() {
       const cccdSo = document.getElementById('m-cccdSo').value.trim();
-      const cccdNgayCapISO = document.getElementById('m-cccdNgayCap').value;
+      const cccdNgayCapISO = parseTypedDateToISO(document.getElementById('m-cccdNgayCap').value.trim());
 
       // Ghép "Số CCCD - ngày/tháng/năm" giống định dạng gốc trong Sheet
       let cccd = '';
@@ -1201,7 +1268,7 @@
 
       return {
         hoTen: document.getElementById('m-hoTen').value.trim(),
-        ngaySinh: document.getElementById('m-ngaySinh').value, // yyyy-mm-dd, Apps Script sẽ tự parse
+        ngaySinh: parseTypedDateToISO(document.getElementById('m-ngaySinh').value.trim()) || '', // gõ tay dd/mm/yyyy -> yyyy-mm-dd, Apps Script sẽ tự parse
         gioiTinh: document.getElementById('m-gioiTinh').value,
         toDanPho: document.getElementById('m-toDanPho').value.trim(),
         rawPhone: document.getElementById('m-rawPhone').value.trim(),
@@ -1233,6 +1300,17 @@
     async function submitMemberForm(evt) {
       evt.preventDefault();
       document.getElementById('member-form-error').classList.add('hidden');
+
+      const ngaySinhTyped = document.getElementById('m-ngaySinh').value.trim();
+      if (ngaySinhTyped && parseTypedDateToISO(ngaySinhTyped) === null) {
+        showModalError('Ngày sinh không đúng định dạng. Vui lòng nhập theo dạng ngày/tháng/năm, ví dụ: 20/08/1987.');
+        return;
+      }
+      const cccdNgayCapTyped = document.getElementById('m-cccdNgayCap').value.trim();
+      if (cccdNgayCapTyped && parseTypedDateToISO(cccdNgayCapTyped) === null) {
+        showModalError('Ngày cấp CCCD không đúng định dạng. Vui lòng nhập theo dạng ngày/tháng/năm, ví dụ: 15/03/2021.');
+        return;
+      }
 
       const member = buildMemberPayloadFromForm();
       if (!member.hoTen) {
