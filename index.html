@@ -250,7 +250,12 @@
         </div>
         <div class="text-sm flex-1 min-w-0">
           <span class="font-bold text-gray-700">TEAM LEADER</span>
-          <div class="mt-2.5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+
+          <!-- Nhóm 1: Đội bơi nam -->
+          <p class="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <i class="fa-solid fa-mars mr-1"></i> Đội bơi nam:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
 
             <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-white border border-amber-100">
               <div class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">HN</div>
@@ -282,6 +287,25 @@
                   <i class="fa-solid fa-phone text-[10px]"></i> 0867 731 918
                 </a>
                 <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Tổ 3</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Nhóm 2: Đội bơi nữ -->
+          <p class="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <i class="fa-solid fa-venus mr-1"></i> Đội bơi nữ:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+
+            <div class="flex items-center gap-2.5 p-3 rounded-xl bg-gradient-to-br from-rose-50 to-white border border-rose-100">
+              <div class="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">TC</div>
+              <div class="min-w-0">
+                <p class="font-bold text-gray-900 text-sm truncate">Cô Ngô Thị Chuyền</p>
+                <a href="tel:0975288067" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
+                  <i class="fa-solid fa-phone text-[10px]"></i> 0975 288 067
+                </a>
+                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">Tổ 1</span>
               </div>
             </div>
 
@@ -393,12 +417,12 @@
         <table class="w-full text-left border-collapse" id="members-table">
           <thead>
             <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-              <th class="py-4 px-6 w-16 text-center border-r border-red-600/30"><i class="fa-solid fa-list-ol mr-1"></i> STT</th>
-              <th class="py-4 px-6 border-r border-red-600/30"><i class="fa-solid fa-user mr-1"></i> Họ và tên</th>
-              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-cake-candles mr-1"></i> Năm sinh</th>
-              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-ruler-vertical mr-1"></i> <span class="no-print">Chiều cao - Cân nặng</span><span class="print-only-inline">Cao - Nặng</span></th>
-              <th class="py-4 px-6 text-center border-r border-red-600/30"><i class="fa-solid fa-venus-mars mr-1"></i> Giới tính</th>
-              <th class="py-4 px-6"><i class="fa-solid fa-house-chimney mr-1"></i> Tổ dân phố</th>
+              <th class="py-4 px-6 w-16 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-list-ol"></i><br>STT</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-user"></i><br>Họ và tên</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-cake-candles"></i><br>DOB</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-shirt"></i><br>Size áo</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-venus-mars"></i><br>Giới tính</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap"><i class="fa-solid fa-house-chimney"></i><br>Tổ dân phố</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700">
@@ -618,40 +642,13 @@
       return cleaned || str;
     }
 
-    // Rút gọn Chiều cao - Cân nặng: chỉ giữ lại số đo chiều cao (dạng 1m64, 165cm...)
-    // và cân nặng (dạng 88kg), bỏ hết dấu câu/ký tự thừa (-, ~, /, khoảng...).
-    // Vd: "1m64-~88kg" -> "1m64 / 88kg"
-    function formatChieuCaoCanNang(raw) {
+    // Chuẩn hóa Size áo: bỏ khoảng trắng thừa, viết hoa (S, M, L, XL, 2XL, 3XL...)
+    // để dữ liệu nhập kiểu "xl", " l ", "2xl" trong Sheet đều hiển thị gọn gàng, đồng nhất.
+    function formatSizeAo(raw) {
       if (!raw) return '---';
       const str = raw.toString().trim();
       if (!str || str === '---') return '---';
-
-      let height = '';
-      let m = str.match(/(\d)\s*m\s*(\d{1,2})/i);
-      if (m) {
-        height = `${m[1]}m${m[2].padStart(2, '0')}`;
-      } else {
-        m = str.match(/(\d)[.,](\d{2})\s*m/i);
-        if (m) height = `${m[1]}m${m[2]}`;
-        else {
-          m = str.match(/(\d{2,3})\s*cm/i);
-          if (m) height = `${m[1]}cm`;
-        }
-      }
-
-      let weight = '';
-      m = str.match(/(\d{2,3}(?:[.,]\d{1,2})?)\s*kg/i);
-      if (m) weight = `${m[1]}kg`;
-
-      if (!height && !weight) return str;
-
-      // Luôn hiển thị đủ 2 vế "Chiều cao / Cân nặng". Nếu thiếu 1 trong 2, hiển thị
-      // placeholder rõ ràng thay vì bỏ trống:
-      // - Thiếu chiều cao -> "---"     (vd: --- / 70kg)
-      // - Thiếu cân nặng  -> "---kg"   (vd: 1m80 / ---kg)
-      const heightPart = height || '---';
-      const weightPart = weight || '---kg';
-      return `${heightPart} / ${weightPart}`;
+      return str.toUpperCase();
     }
 
     function showMembers(list) {
@@ -837,7 +834,7 @@
           <td class="py-4 px-6 text-center text-black font-normal border-r border-gray-100/50">${displayStt}</td>
           <td class="py-4 px-6 font-semibold text-gray-900 border-r border-gray-100/50">${displayName(item)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
-          <td class="py-4 px-6 text-center border-r border-gray-100/50">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</td>
+          <td class="py-4 px-6 text-center border-r border-gray-100/50">${formatSizeAo(item.sizeAo)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
           <td class="py-4 px-6 text-gray-700 font-medium">${item.toDanPho || '---'}</td>
         `;
@@ -858,7 +855,7 @@
                 <p class="text-[11px] text-gray-500 leading-relaxed">
                   <span class="block">Năm sinh: <strong class="text-gray-700">${item.namSinh || '---'}</strong></span>
                   <span class="block">Giới tính: <strong class="text-gray-700">${item.gioiTinh || '---'}</strong></span>
-                  <span class="block">Cao/Nặng: <strong class="text-gray-700">${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></span>
+                  <span class="block">Size áo: <strong class="text-gray-700">${formatSizeAo(item.sizeAo)}</strong></span>
                 </p>
               </div>
             </div>
@@ -876,7 +873,7 @@
               <p class="text-xs text-gray-600 pl-7 leading-relaxed">
                 <span class="block">Năm sinh: <strong>${item.namSinh || '---'}</strong></span>
                 <span class="block">Giới tính: <strong>${item.gioiTinh || '---'}</strong></span>
-                <span class="block">Cao/Nặng: <strong>${formatChieuCaoCanNang(item.chieuCaoCanNang)}</strong></span>
+                <span class="block">Size áo: <strong>${formatSizeAo(item.sizeAo)}</strong></span>
               </p>
             </div>
             <span class="shrink-0 mt-0.5 text-xs font-semibold text-gray-700 bg-white/80 border border-black/5 px-2.5 py-1.5 rounded-md tracking-wide">${item.toDanPho || '---'}</span>
