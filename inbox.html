@@ -146,6 +146,35 @@
     @media (max-width: 380px) {
       .boat-header-scene { transform: scale(0.78); transform-origin: center top; margin-bottom: -28px; }
     }
+
+    /* ==== Bảng chọn Ngày/Tháng/Năm kiểu cuộn (wheel picker) ==== */
+    .wheel-picker-wrap { height: 200px; padding: 0 4px; }
+    .wheel-col {
+      width: 33.33%;
+      height: 200px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      -webkit-overflow-scrolling: touch;
+      text-align: center;
+      scrollbar-width: none;
+      padding: 80px 0;
+    }
+    .wheel-col::-webkit-scrollbar { display: none; }
+    .wheel-col .wheel-item {
+      height: 40px;
+      line-height: 40px;
+      scroll-snap-align: center;
+      color: #9CA3AF;
+      font-size: 16px;
+      font-weight: 500;
+      user-select: none;
+      transition: color .12s, font-weight .12s, font-size .12s;
+    }
+    .wheel-col .wheel-item.selected {
+      color: #111827;
+      font-weight: 700;
+      font-size: 18px;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
@@ -396,7 +425,10 @@
 
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày sinh</label>
-            <input id="m-ngaySinh" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <div class="relative">
+              <input id="m-ngaySinh" type="text" readonly data-iso="" placeholder="dd/mm/yyyy" class="wheel-date-trigger w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer bg-white">
+              <i class="fa-regular fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Giới tính</label>
@@ -422,7 +454,10 @@
           </div>
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ngày cấp CCCD</label>
-            <input id="m-cccdNgayCap" type="date" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+            <div class="relative">
+              <input id="m-cccdNgayCap" type="text" readonly data-iso="" placeholder="dd/mm/yyyy" class="wheel-date-trigger w-full border border-gray-200 rounded-lg px-3 py-2.5 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer bg-white">
+              <i class="fa-regular fa-calendar absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+            </div>
           </div>
 
           <div>
@@ -515,6 +550,32 @@
       </div>
     </div>
   </footer>
+
+  <!-- Bảng chọn Ngày/Tháng/Năm kiểu cuộn (wheel picker) - dùng chung cho Ngày sinh & Ngày cấp CCCD,
+       hiển thị giống nhau trên cả điện thoại lẫn máy tính -->
+  <div id="wheel-date-overlay" class="no-print hidden fixed inset-0 z-[999] items-end sm:items-center justify-center bg-black/40">
+    <div class="bg-gray-50 w-full sm:w-80 sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden">
+      <div class="text-center py-3 text-sm font-bold text-gray-700 border-b border-gray-200" id="wheel-date-title">Chọn ngày</div>
+      <div class="flex text-[11px] text-gray-400 font-semibold px-1 pt-2">
+        <div class="w-1/3 text-center">Ngày</div>
+        <div class="w-1/3 text-center">Tháng</div>
+        <div class="w-1/3 text-center">Năm</div>
+      </div>
+      <div class="wheel-picker-wrap relative flex justify-center">
+        <div class="wheel-selection-lines absolute left-3 right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+          <div class="border-t border-blue-400" style="transform: translateY(-20px);"></div>
+          <div class="border-t border-blue-400" style="transform: translateY(20px);"></div>
+        </div>
+        <div id="wheel-col-day" class="wheel-col"></div>
+        <div id="wheel-col-month" class="wheel-col"></div>
+        <div id="wheel-col-year" class="wheel-col"></div>
+      </div>
+      <div class="flex border-t border-gray-200">
+        <button type="button" id="wheel-cancel-btn" class="flex-1 py-3.5 text-gray-600 font-medium active:bg-gray-100">Hủy</button>
+        <button type="button" id="wheel-ok-btn" class="flex-1 py-3.5 text-red-600 font-bold border-l border-gray-200 active:bg-gray-100">Chọn</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     // Link API — gọi qua Cloudflare Worker trung gian (KHÔNG gọi thẳng Apps Script nữa).
@@ -1020,6 +1081,177 @@
       return str;
     }
 
+    // Chuyển "yyyy-mm-dd" sang "dd/mm/yyyy" để hiển thị lên ô (đã đủ số 0 đứng trước)
+    function isoToDisplayDate(iso) {
+      if (!iso) return '';
+      const parts = iso.split('-');
+      if (parts.length !== 3) return '';
+      const [y, m, d] = parts;
+      if (!y || !m || !d) return '';
+      return `${d}/${m}/${y}`;
+    }
+
+    // ===== BẢNG CHỌN NGÀY / THÁNG / NĂM KIỂU CUỘN (WHEEL PICKER) =====
+    // Dùng chung cho ô Ngày sinh & Ngày cấp CCCD, hiển thị giống nhau trên điện thoại lẫn máy tính
+    // (tự vẽ bằng HTML/CSS/JS, không phụ thuộc vào giao diện lịch riêng của từng hệ điều hành).
+    const WHEEL_ITEM_H = 40;
+    const wheelPickerState = { inputEl: null, minYear: 1920, maxYear: new Date().getFullYear() };
+
+    function pad2(n) { return n.toString().padStart(2, '0'); }
+
+    function daysInMonth(month, year) {
+      return new Date(year, month, 0).getDate();
+    }
+
+    function renderWheelColumn(colEl, items) {
+      colEl.innerHTML = items.map(it => `<div class="wheel-item">${it.label}</div>`).join('');
+    }
+
+    function setWheelSelectedIndex(colEl, index, smooth) {
+      const max = colEl.querySelectorAll('.wheel-item').length - 1;
+      const clamped = Math.max(0, Math.min(index, max));
+      colEl.scrollTo({ top: clamped * WHEEL_ITEM_H, behavior: smooth ? 'smooth' : 'auto' });
+    }
+
+    function getWheelSelectedIndex(colEl) {
+      const max = colEl.querySelectorAll('.wheel-item').length - 1;
+      const idx = Math.round(colEl.scrollTop / WHEEL_ITEM_H);
+      return Math.max(0, Math.min(idx, max));
+    }
+
+    function highlightWheelColumn(colEl) {
+      const idx = getWheelSelectedIndex(colEl);
+      colEl.querySelectorAll('.wheel-item').forEach((el, i) => el.classList.toggle('selected', i === idx));
+      return idx;
+    }
+
+    function attachWheelColumnEvents(colEl, onSettle) {
+      let scrollTimer = null;
+      colEl.addEventListener('scroll', () => {
+        highlightWheelColumn(colEl);
+        if (scrollTimer) clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const idx = highlightWheelColumn(colEl);
+          if (onSettle) onSettle(idx);
+        }, 130);
+      });
+      colEl.addEventListener('click', (e) => {
+        const itemEl = e.target.closest('.wheel-item');
+        if (!itemEl) return;
+        const items = Array.from(colEl.querySelectorAll('.wheel-item'));
+        setWheelSelectedIndex(colEl, items.indexOf(itemEl), true);
+      });
+    }
+
+    const wheelDayCol = document.getElementById('wheel-col-day');
+    const wheelMonthCol = document.getElementById('wheel-col-month');
+    const wheelYearCol = document.getElementById('wheel-col-year');
+
+    // Vẽ lại cột Ngày theo đúng số ngày của Tháng/Năm đang chọn (vd Tháng 2 chỉ có 28/29 ngày),
+    // cố gắng giữ nguyên ngày đang chọn nếu vẫn hợp lệ, không thì tự lùi về ngày cuối tháng.
+    function rebuildDayColumn(month, year, keepDay) {
+      const total = daysInMonth(month, year);
+      const items = [];
+      for (let d = 1; d <= total; d++) items.push({ label: pad2(d) });
+      renderWheelColumn(wheelDayCol, items);
+      const targetDay = Math.min(keepDay || 1, total);
+      setWheelSelectedIndex(wheelDayCol, targetDay - 1, false);
+      highlightWheelColumn(wheelDayCol);
+    }
+
+    function currentWheelMonthYear() {
+      const month = getWheelSelectedIndex(wheelMonthCol) + 1;
+      const year = wheelPickerState.minYear + getWheelSelectedIndex(wheelYearCol);
+      return { month, year };
+    }
+
+    attachWheelColumnEvents(wheelDayCol);
+    attachWheelColumnEvents(wheelMonthCol, () => {
+      const day = getWheelSelectedIndex(wheelDayCol) + 1;
+      const { month, year } = currentWheelMonthYear();
+      rebuildDayColumn(month, year, day);
+    });
+    attachWheelColumnEvents(wheelYearCol, () => {
+      const day = getWheelSelectedIndex(wheelDayCol) + 1;
+      const { month, year } = currentWheelMonthYear();
+      rebuildDayColumn(month, year, day);
+    });
+
+    // Mở bảng cuộn, tự đưa về đúng ngày đang có sẵn trong ô (nếu có), hoặc hôm nay nếu ô đang trống
+    function openWheelDatePicker(inputEl, opts) {
+      opts = opts || {};
+      const minYear = opts.minYear || 1920;
+      const maxYear = opts.maxYear || new Date().getFullYear();
+      wheelPickerState.inputEl = inputEl;
+      wheelPickerState.minYear = minYear;
+      wheelPickerState.maxYear = maxYear;
+      document.getElementById('wheel-date-title').innerText = opts.title || 'Chọn ngày';
+
+      let dd, mm, yyyy;
+      const iso = inputEl.dataset.iso;
+      if (iso) {
+        const parts = iso.split('-');
+        yyyy = parseInt(parts[0], 10); mm = parseInt(parts[1], 10); dd = parseInt(parts[2], 10);
+      } else {
+        const today = new Date();
+        dd = today.getDate(); mm = today.getMonth() + 1; yyyy = today.getFullYear();
+      }
+      yyyy = Math.max(minYear, Math.min(maxYear, yyyy));
+
+      const monthItems = [];
+      for (let m = 1; m <= 12; m++) monthItems.push({ label: 'Th' + pad2(m) });
+      renderWheelColumn(wheelMonthCol, monthItems);
+
+      const yearItems = [];
+      for (let y = minYear; y <= maxYear; y++) yearItems.push({ label: y.toString() });
+      renderWheelColumn(wheelYearCol, yearItems);
+
+      rebuildDayColumn(mm, yyyy, dd);
+
+      const overlay = document.getElementById('wheel-date-overlay');
+      overlay.classList.remove('hidden');
+      overlay.classList.add('flex');
+
+      requestAnimationFrame(() => {
+        setWheelSelectedIndex(wheelMonthCol, mm - 1, false);
+        setWheelSelectedIndex(wheelYearCol, yyyy - minYear, false);
+        setWheelSelectedIndex(wheelDayCol, dd - 1, false);
+        highlightWheelColumn(wheelMonthCol);
+        highlightWheelColumn(wheelYearCol);
+        highlightWheelColumn(wheelDayCol);
+      });
+    }
+
+    function closeWheelDatePicker() {
+      const overlay = document.getElementById('wheel-date-overlay');
+      overlay.classList.add('hidden');
+      overlay.classList.remove('flex');
+    }
+
+    document.getElementById('wheel-cancel-btn').addEventListener('click', closeWheelDatePicker);
+    document.getElementById('wheel-date-overlay').addEventListener('click', (e) => {
+      if (e.target.id === 'wheel-date-overlay') closeWheelDatePicker();
+    });
+    document.getElementById('wheel-ok-btn').addEventListener('click', () => {
+      const day = getWheelSelectedIndex(wheelDayCol) + 1;
+      const { month, year } = currentWheelMonthYear();
+      const iso = `${year}-${pad2(month)}-${pad2(day)}`;
+      if (wheelPickerState.inputEl) {
+        wheelPickerState.inputEl.value = `${pad2(day)}/${pad2(month)}/${year}`;
+        wheelPickerState.inputEl.dataset.iso = iso;
+      }
+      closeWheelDatePicker();
+    });
+
+    document.getElementById('m-ngaySinh').addEventListener('click', function () {
+      const curYear = new Date().getFullYear();
+      openWheelDatePicker(this, { title: 'Chọn ngày sinh', minYear: curYear - 100, maxYear: curYear });
+    });
+    document.getElementById('m-cccdNgayCap').addEventListener('click', function () {
+      const curYear = new Date().getFullYear();
+      openWheelDatePicker(this, { title: 'Chọn ngày cấp CCCD', minYear: curYear - 30, maxYear: curYear + 1 });
+    });
+
     // Chuyển ngày dạng "d/M/yyyy" hoặc "dd/MM/yyyy" sang "yyyy-mm-dd" để đổ vào <input type="date">
     function toISODateForInput(raw) {
       if (!raw) return '';
@@ -1121,6 +1353,8 @@
     function openAddModal() {
       document.getElementById('member-form').reset();
       document.getElementById('m-rowIndex').value = '';
+      document.getElementById('m-ngaySinh').dataset.iso = '';
+      document.getElementById('m-cccdNgayCap').dataset.iso = '';
       document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> Thêm thành viên';
       document.getElementById('member-save-btn-text').innerText = 'Lưu';
       document.getElementById('member-delete-btn').classList.add('hidden');
@@ -1139,14 +1373,18 @@
       document.getElementById('m-rowIndex').value = item.rowIndex;
 
       document.getElementById('m-hoTen').value = item.hoTen || '';
-      document.getElementById('m-ngaySinh').value = toISODateForInput(item.ngaySinh);
+      const ngaySinhISO = toISODateForInput(item.ngaySinh);
+      document.getElementById('m-ngaySinh').value = isoToDisplayDate(ngaySinhISO);
+      document.getElementById('m-ngaySinh').dataset.iso = ngaySinhISO;
       document.getElementById('m-gioiTinh').value = item.gioiTinh || '';
       document.getElementById('m-rawPhone').value = item.rawPhone || '';
       document.getElementById('m-toDanPho').value = item.toDanPho || '';
 
       const cccdParts = getCCCDParts(item.cccd);
       document.getElementById('m-cccdSo').value = cccdParts.number || '';
-      document.getElementById('m-cccdNgayCap').value = toISODateForInput(cccdParts.date);
+      const cccdNgayCapISO = toISODateForInput(cccdParts.date);
+      document.getElementById('m-cccdNgayCap').value = isoToDisplayDate(cccdNgayCapISO);
+      document.getElementById('m-cccdNgayCap').dataset.iso = cccdNgayCapISO;
 
       const hcParsed = parseChieuCaoCanNang(item.chieuCaoCanNang);
       document.getElementById('m-chieuCao').value = (hcParsed && hcParsed.heightPart && hcParsed.heightPart !== '---') ? hcParsed.heightPart : (hcParsed && !hcParsed.heightPart ? hcParsed.raw : '');
@@ -1189,7 +1427,7 @@
 
     function buildMemberPayloadFromForm() {
       const cccdSo = document.getElementById('m-cccdSo').value.trim();
-      const cccdNgayCapISO = document.getElementById('m-cccdNgayCap').value;
+      const cccdNgayCapISO = document.getElementById('m-cccdNgayCap').dataset.iso || '';
 
       // Ghép "Số CCCD - ngày/tháng/năm" giống định dạng gốc trong Sheet
       let cccd = '';
@@ -1206,7 +1444,7 @@
 
       return {
         hoTen: document.getElementById('m-hoTen').value.trim(),
-        ngaySinh: document.getElementById('m-ngaySinh').value, // yyyy-mm-dd, Apps Script sẽ tự parse
+        ngaySinh: document.getElementById('m-ngaySinh').dataset.iso || '', // yyyy-mm-dd, Apps Script sẽ tự parse
         gioiTinh: document.getElementById('m-gioiTinh').value,
         toDanPho: document.getElementById('m-toDanPho').value.trim(),
         rawPhone: document.getElementById('m-rawPhone').value.trim(),
