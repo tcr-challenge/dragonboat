@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <title>CLB Thuyền Rồng - Đình Thượng Cát</title>
+  <title>CLB Bơi Thuyền Rồng - Đình Thượng Cát</title>
 
   <!-- ⚡ TĂNG TỐC LOAD: mở kết nối sớm (DNS + TLS) tới các domain sẽ dùng, -->
   <!-- giúp trình duyệt không phải mất thời gian "bắt tay" lại khi script/CSS/API thật sự được gọi -->
@@ -105,13 +105,13 @@
     .boat-paddle-2 { animation-delay: 0.18s; }
     .boat-paddle-3 { animation-delay: 0.36s; }
     .boat-paddle-4 { animation-delay: 0.54s; }
-    .boat-wave-wrap { position: absolute; left: 0; bottom: 0; width: 220px; height: 34px; overflow: hidden; z-index: 1; }
-    .boat-wave-svg { position: absolute; top: 0; left: 0; height: 34px; width: 440px; }
+    .boat-wave-wrap { position: absolute; left: 0; bottom: 0; width: 100%; height: 34px; overflow: hidden; z-index: 1; }
+    .boat-wave-svg { position: absolute; top: 0; left: 0; height: 34px; width: 200%; }
     .boat-wave-back { animation: waveScrollAnim 3.2s linear infinite; opacity: 0.55; }
     .boat-wave-front { animation: waveScrollAnim 1.8s linear infinite reverse; opacity: 0.9; }
     @keyframes waveScrollAnim {
       from { transform: translateX(0); }
-      to   { transform: translateX(-220px); }
+      to   { transform: translateX(-50%); }
     }
     .boat-loading-text {
       animation: boatTextPulse 1.6s ease-in-out infinite;
@@ -123,19 +123,51 @@
 
     /* ===== LOGO HEADER (đồng bộ với web NOIBO 1): Y NGUYÊN THUYỀN RỒNG + SÓNG NƯỚC
        CỦA MÀN LOADING (không còn khung nền bo tròn bao quanh), phóng to hơn để nhìn rõ. ===== */
-    .boat-header-scene { position: relative; width: 330px; height: 138px; margin: 0 auto; }
-    .boat-header-boat { position: absolute; left: 0; top: 0; width: 330px; height: 105px; z-index: 2; }
-    .boat-header-wave-wrap { position: absolute; left: 0; bottom: 0; width: 330px; height: 51px; overflow: hidden; z-index: 1; }
-    .boat-header-wave-svg { position: absolute; top: 0; left: 0; height: 51px; width: 660px; }
+    .boat-header-scene { position: relative; width: 330px; max-width: 100%; height: 172px; margin: 0 auto; }
+    .boat-header-boat { position: absolute; left: 0; top: 34px; width: 330px; height: 105px; z-index: 2; }
+    .boat-header-wave-wrap { position: absolute; left: 0; bottom: 0; width: 100%; height: 51px; overflow: hidden; z-index: 1; }
+    .boat-header-wave-svg { position: absolute; top: 0; left: 0; height: 51px; width: 200%; }
     .boat-header-wave-back { animation: waveScrollHeaderAnim 3.2s linear infinite; opacity: 0.55; }
     .boat-header-wave-front { animation: waveScrollHeaderAnim 1.8s linear infinite reverse; opacity: 0.9; }
     @keyframes waveScrollHeaderAnim {
       from { transform: translateX(0); }
-      to   { transform: translateX(-330px); }
+      to   { transform: translateX(-50%); }
     }
+
+    /* ⭐ NỔI BẬT THUYỀN RỒNG TRÊN NỀN BANNER ĐỎ NÂU: bóng đổ nhẹ tạo chiều sâu
+       (không dùng viền trắng phát quang) giúp thuyền tách khỏi nền mà vẫn tự nhiên. */
+    .boat-header-boat {
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.45));
+    }
+
+    /* ===== 2 ĐÁM MÂY CỔ NHẸ NHÀNG BAY QUA LẠI PHÍA TRÊN THUYỀN ===== */
+    .boat-header-clouds { position: absolute; top: 0; left: 0; width: 100%; height: 36px; z-index: 1; pointer-events: none; overflow: visible; }
+    .boat-header-cloud { position: absolute; opacity: 0.8; }
+    .boat-header-cloud-1 { top: 0; left: 6%; width: 76px; animation: cloudDriftA 17s ease-in-out infinite alternate; }
+    .boat-header-cloud-2 { top: 14px; right: 8%; width: 56px; animation: cloudDriftB 21s ease-in-out infinite alternate; }
+    @keyframes cloudDriftA {
+      from { transform: translateX(-12px); }
+      to   { transform: translateX(16px); }
+    }
+    @keyframes cloudDriftB {
+      from { transform: translateX(12px); }
+      to   { transform: translateX(-16px); }
+    }
+
     /* Màn hình rất nhỏ (< 380px): thu nhỏ lại logo header để không bị tràn ngang */
     @media (max-width: 380px) {
       .boat-header-scene { transform: scale(0.78); transform-origin: center top; margin-bottom: -28px; }
+    }
+
+    /* ===== DI ĐỘNG: SÓNG NƯỚC TỰ NHẬN DIỆN KÍCH THƯỚC MÀN HÌNH =====
+       Trên thiết bị di động, mở rộng khung chứa cảnh (scene) ra full chiều rộng màn hình
+       để dải sóng nước phía dưới thuyền luôn kéo dài hết chiều ngang thiết bị, còn thuyền
+       rồng vẫn giữ nguyên kích thước và được canh giữa. */
+    @media (max-width: 767px) {
+      .boat-loading-scene { width: 100%; }
+      .boat-loading-boat { left: 50%; margin-left: -110px; }
+      .boat-header-scene { width: 100%; }
+      .boat-header-boat { left: 50%; margin-left: -165px; }
     }
   </style>
 </head>
@@ -156,6 +188,19 @@
            B) Đổi cả ẢNH NỀN của banner đỏ: xem ghi chú (2/2) trong thẻ <style> phía trên (class .bg-gradient-header) -->
       <div class="inline-block mb-3">
         <div class="boat-header-scene">
+          <!-- 2 đám mây cổ nhẹ nhàng bay qua lại phía trên thuyền, tốc độ chậm -->
+          <div class="boat-header-clouds">
+            <svg class="boat-header-cloud boat-header-cloud-1" viewBox="0 0 34 22" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.35,10.04C18.67,6.59,15.64,4,12,4C9.11,4,6.6,5.64,5.35,8.04C2.34,8.36,0,10.91,0,14c0,3.31,2.69,6,6,6h13c2.76,0,5-2.24,5-5C24,12.36,21.95,10.22,19.35,10.04z" fill="#fff7ed" fill-opacity="0.88"/>
+              <path d="M24,15 Q30,12 29,18 Q34,19 29,22" fill="none" stroke="#fff7ed" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/>
+            </svg>
+            <svg class="boat-header-cloud boat-header-cloud-2" viewBox="0 0 34 22" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(34,0) scale(-1,1)">
+                <path d="M19.35,10.04C18.67,6.59,15.64,4,12,4C9.11,4,6.6,5.64,5.35,8.04C2.34,8.36,0,10.91,0,14c0,3.31,2.69,6,6,6h13c2.76,0,5-2.24,5-5C24,12.36,21.95,10.22,19.35,10.04z" fill="#fff7ed" fill-opacity="0.8"/>
+                <path d="M24,15 Q30,12 29,18 Q34,19 29,22" fill="none" stroke="#fff7ed" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>
+              </g>
+            </svg>
+          </div>
           <!-- Sóng nước (2 lớp, chạy ngược chiều nhau) — giống hệt màn Loading, chỉ phóng to -->
           <div class="boat-header-wave-wrap">
             <svg class="boat-header-wave-svg boat-header-wave-back" viewBox="0 0 440 34" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -169,11 +214,11 @@
           <!-- Thuyền rồng + các tay chèo — giống hệt màn Loading, chỉ phóng to -->
           <svg class="boat-header-boat" viewBox="0 0 220 70" xmlns="http://www.w3.org/2000/svg">
             <g class="boat-bob-group">
-              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="1.5"/>
-              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
-              <circle cx="9" cy="35" r="1.6" fill="#fde047"/>
-              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#dc2626"/>
+              <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#fbbf24" stroke="#78350f" stroke-width="1.5"/>
+              <path d="M14,48 Q4,44 6,38 Q10,34 15,38 Z" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+              <path d="M206,48 Q218,44 217,35 Q214,28 205,31 Q201,38 206,48 Z" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+              <circle cx="211" cy="35" r="1.6" fill="#7f1d1d"/>
+              <path d="M216,31 Q218,26 213,25" fill="none" stroke="#fff7ed" stroke-width="1.5" stroke-linecap="round"/>
               <g>
                 <circle cx="55" cy="33" r="5.5" fill="#fcd9b8"/>
                 <rect x="50" y="38" width="10" height="10" rx="3" fill="#f59e0b"/>
@@ -199,7 +244,7 @@
         </div>
       </div>
       <h1 class="text-2xl md:text-4xl font-extrabold tracking-wider uppercase drop-shadow-md">
-        CÂU LẠC BỘ THUYỀN RỒNG
+        CÂU LẠC BỘ BƠI THUYỀN RỒNG
       </h1>
       <h2 class="text-xl md:text-2xl font-bold tracking-wide uppercase text-amber-300 mt-1 drop-shadow-sm">
         ĐÌNH THƯỢNG CÁT
@@ -213,31 +258,45 @@
   <!-- MAIN CONTAINER -->
   <main class="container mx-auto px-4 py-6 flex-grow max-w-5xl">
 
+    <!-- 2. MỤC TÌM KIẾM -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 no-print">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </div>
+        <input 
+          type="text" 
+          id="search-input" 
+          oninput="filterMembers()"
+          placeholder="Nhập TÊN thành viên" 
+          class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all shadow-inner placeholder:text-gray-400"
+        >
+      </div>
+    </div>
+
     <!-- 4. TỔNG SỐ THÀNH VIÊN & THÔNG TIN CLB -->
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 space-y-4">
 
-      <!-- Dòng 1: Thống kê tổng số thành viên -->
-      <div class="flex items-center gap-3.5 no-print">
-        <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 shrink-0">
-          <i class="fa-solid fa-users text-xl"></i>
+      <!-- Dòng 1: Thống kê tổng số thành viên + Link đăng ký tham gia CLB (cùng hàng) -->
+      <div class="flex flex-wrap items-center justify-between gap-3.5 no-print">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 shrink-0">
+            <i class="fa-solid fa-users text-xl"></i>
+          </div>
+          <div class="flex items-baseline gap-2 flex-wrap">
+            <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">ĐÃ ĐĂNG KÝ THAM GIA:</span>
+            <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
+            <span class="text-sm font-medium text-gray-500">thành viên</span>
+          </div>
         </div>
-        <div class="flex items-baseline gap-2 flex-wrap">
-          <span class="text-xs font-bold uppercase tracking-wider text-red-600/80">ĐÃ ĐĂNG KÝ THAM GIA:</span>
-          <span id="total-count" class="text-2xl font-black tracking-tight text-red-700">...</span>
-          <span class="text-sm font-medium text-gray-500">thành viên</span>
-        </div>
-      </div>
-
-      <div class="border-t border-gray-100 no-print"></div>
-
-      <!-- Dòng 2: Link đăng ký tham gia CLB -->
-      <div class="flex items-center gap-3.5 no-print">
-        <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-          <i class="fa-solid fa-link text-xl"></i>
-        </div>
-        <div class="text-sm">
-          <span class="font-bold text-gray-700">Đăng ký:</span>
-          <a href="https://vnshort.com/9iSi" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline break-all">https://vnshort.com/9iSi</a>
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+            <i class="fa-solid fa-link text-xl"></i>
+          </div>
+          <div class="text-sm">
+            <span class="font-bold text-gray-700">Đăng ký:</span>
+            <a href="https://vnshort.com/9iSi" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline break-all">https://vnshort.com/9iSi</a>
+          </div>
         </div>
       </div>
 
@@ -261,10 +320,12 @@
               <div class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">HN</div>
               <div class="min-w-0">
                 <p class="font-bold text-gray-900 text-sm truncate">Anh Ngô Hữu Hoàng</p>
-                <a href="tel:0977212534" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0977 212 534
-                </a>
-                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Tổ 1 + 4</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <a href="tel:0977212534" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-[10px]"></i> 0977 212 534
+                  </a>
+                  <span class="inline-block text-[10px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Tổ 1 + 4</span>
+                </div>
               </div>
             </div>
 
@@ -272,10 +333,12 @@
               <div class="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">VM</div>
               <div class="min-w-0">
                 <p class="font-bold text-gray-900 text-sm truncate">Anh Nguyễn Văn Mạnh</p>
-                <a href="tel:0967247993" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0967 247 993
-                </a>
-                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Tổ 2</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <a href="tel:0967247993" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-[10px]"></i> 0967 247 993
+                  </a>
+                  <span class="inline-block text-[10px] font-bold uppercase tracking-wide text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">Tổ 2</span>
+                </div>
               </div>
             </div>
 
@@ -283,10 +346,12 @@
               <div class="w-9 h-9 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">BT</div>
               <div class="min-w-0">
                 <p class="font-bold text-gray-900 text-sm truncate">Anh Nguyễn Bá Tuyên</p>
-                <a href="tel:0867731918" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0867 731 918
-                </a>
-                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Tổ 3</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <a href="tel:0867731918" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-[10px]"></i> 0867 731 918
+                  </a>
+                  <span class="inline-block text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Tổ 3</span>
+                </div>
               </div>
             </div>
 
@@ -302,10 +367,12 @@
               <div class="w-9 h-9 rounded-full bg-rose-500 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">TC</div>
               <div class="min-w-0">
                 <p class="font-bold text-gray-900 text-sm truncate">Cô Ngô Thị Chuyền</p>
-                <a href="tel:0975288067" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
-                  <i class="fa-solid fa-phone text-[10px]"></i> 0975 288 067
-                </a>
-                <span class="inline-block mt-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">Tổ 1</span>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <a href="tel:0975288067" class="text-xs font-semibold text-gray-600 hover:text-red-600 flex items-center gap-1">
+                    <i class="fa-solid fa-phone text-[10px]"></i> 0975 288 067
+                  </a>
+                  <span class="inline-block text-[10px] font-bold uppercase tracking-wide text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">Tổ 1</span>
+                </div>
               </div>
             </div>
 
@@ -313,22 +380,6 @@
         </div>
       </div>
 
-    </div>
-
-    <!-- 2. MỤC TÌM KIẾM -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6 no-print">
-      <div class="relative">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </div>
-        <input 
-          type="text" 
-          id="search-input" 
-          oninput="filterMembers()"
-          placeholder="Nhập TÊN thành viên" 
-          class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm transition-all shadow-inner placeholder:text-gray-400"
-        >
-      </div>
     </div>
 
     <!-- 3. BA TAB CHỨC NĂNG -->
@@ -373,12 +424,12 @@
             <g class="boat-bob-group">
               <!-- Thân thuyền -->
               <path d="M14,48 Q110,68 206,48 L198,38 Q110,52 22,38 Z" fill="#b91c1c" stroke="#7f1d1d" stroke-width="1.5"/>
-              <!-- Đầu rồng phía mũi thuyền -->
-              <path d="M14,48 Q2,44 3,35 Q6,28 15,31 Q19,38 14,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
-              <circle cx="9" cy="35" r="1.6" fill="#fde047"/>
-              <path d="M4,31 Q2,26 7,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
-              <!-- Đuôi rồng phía lái thuyền -->
-              <path d="M206,48 Q216,44 214,38 Q210,34 205,38 Z" fill="#dc2626"/>
+              <!-- Đuôi rồng phía mũi thuyền (trái) -->
+              <path d="M14,48 Q4,44 6,38 Q10,34 15,38 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+              <!-- Đầu rồng phía lái thuyền (phải) -->
+              <path d="M206,48 Q218,44 217,35 Q214,28 205,31 Q201,38 206,48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/>
+              <circle cx="211" cy="35" r="1.6" fill="#fde047"/>
+              <path d="M216,31 Q218,26 213,25" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
 
               <!-- 4 người đang chèo thuyền, tay chèo chuyển động so le -->
               <g>
@@ -463,7 +514,7 @@
           id="youtube-video"
           class="absolute inset-0 w-full h-full"
           src=""
-          title="Video CLB Thuyền Rồng Đình Thượng Cát"
+          title="Video CLB Bơi Thuyền Rồng Đình Thượng Cát"
           loading="lazy"
           referrerpolicy="strict-origin-when-cross-origin"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -480,7 +531,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-gray-800 pb-6 text-left">
         <div>
           <h4 class="text-white font-bold uppercase text-base tracking-wide mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-ship text-amber-400"></i> CLB Thuyền Rồng Đình Thượng Cát
+            <i class="fa-solid fa-ship text-amber-400"></i> CLB Bơi Thuyền Rồng Đình Thượng Cát
           </h4>
           <p class="text-xs text-gray-400 leading-relaxed">
             Chào mừng các thành viên tham gia tập luyện và phát triển phong trào thể thao truyền thống bơi thuyền rồng tại quê hương Thượng Cát.
@@ -488,8 +539,8 @@
         </div>
         <div class="space-y-2 text-xs">
           <h5 class="text-gray-400 font-semibold uppercase tracking-wider">Thông tin liên hệ:</h5>
-          <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: </span></p>
-          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: </span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-user-tie text-gray-500 w-4"></i> <span>Leader: Mr. Đàm Xuân Quý</span></p>
+          <p class="flex items-center gap-2"><i class="fa-solid fa-comment-sms text-gray-500 w-4"></i> <span>Zalo nhóm: Duyệt thành viên</span></p>
           <p class="flex items-center gap-2"><i class="fa-brands fa-facebook text-gray-500 w-4"></i> <span>Fanpage: <a href="https://web.facebook.com/thuongcatdragonboat" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer">fb/thuongcatdragonboat</a></span></p>
         </div>
       </div>
