@@ -68,17 +68,17 @@
       #table-container-desktop table th:nth-child(1),
       #table-container-desktop table td:nth-child(1)  { width: 3%  !important; } /* STT: 1-3 chữ số */
       #table-container-desktop table th:nth-child(2),
-      #table-container-desktop table td:nth-child(2)  { width: 17% !important; } /* Họ và tên: cột dài nhất, cần rộng nhất */
+      #table-container-desktop table td:nth-child(2)  { width: 16% !important; } /* Họ và tên: cột dài nhất, cần rộng nhất */
       #table-container-desktop table th:nth-child(3),
-      #table-container-desktop table td:nth-child(3)  { width: 7%  !important; } /* Ngày sinh: dd/mm/yyyy */
+      #table-container-desktop table td:nth-child(3)  { width: 6%  !important; } /* Ngày sinh: dd/mm/yyyy */
       #table-container-desktop table th:nth-child(4),
       #table-container-desktop table td:nth-child(4)  { width: 3%  !important; } /* GT: Nam/Nữ */
       #table-container-desktop table th:nth-child(5),
-      #table-container-desktop table td:nth-child(5)  { width: 7%  !important; } /* Cao/Nặng: vd 1m70 / 70kg */
+      #table-container-desktop table td:nth-child(5)  { width: 6%  !important; } /* Cao/Nặng: vd 1m70 / 70kg */
       #table-container-desktop table th:nth-child(6),
       #table-container-desktop table td:nth-child(6)  { width: 4%  !important; } /* Size áo: S/M/L/XL */
       #table-container-desktop table th:nth-child(7),
-      #table-container-desktop table td:nth-child(7)  { width: 6%  !important; } /* Tay thuận: Trái/Phải/Cả 2 bên */
+      #table-container-desktop table td:nth-child(7)  { width: 5%  !important; } /* Tay thuận: Trái/Phải/Cả 2 bên */
       #table-container-desktop table th:nth-child(8),
       #table-container-desktop table td:nth-child(8)  { width: 10% !important; } /* CCCD: số 12 chữ số + ngày cấp (2 dòng) */
       #table-container-desktop table th:nth-child(9),
@@ -88,14 +88,28 @@
       #table-container-desktop table th:nth-child(11),
       #table-container-desktop table td:nth-child(11) { width: 11% !important; } /* Địa chỉ: chữ dài */
       #table-container-desktop table th:nth-child(12),
-      #table-container-desktop table td:nth-child(12) { width: 8%  !important; } /* Kinh nghiệm */
+      #table-container-desktop table td:nth-child(12) { width: 7%  !important; } /* Kinh nghiệm */
       #table-container-desktop table th:nth-child(13),
-      #table-container-desktop table td:nth-child(13) { width: 8%  !important; } /* Công việc */
+      #table-container-desktop table td:nth-child(13) { width: 7%  !important; } /* Công việc */
       #table-container-desktop table th:nth-child(14),
       #table-container-desktop table td:nth-child(14) { width: 4%  !important; } /* Cam kết: "Cam kết" / "---" */
+      #table-container-desktop table th:nth-child(15),
+      #table-container-desktop table td:nth-child(15) { width: 6%  !important; } /* Nhóm Zalo */
+
+      /* Cột nào đang bị ẨN (qua tính năng Ẩn/Hiện cột) thì cũng ẩn luôn khi in,
+         để bản in/PDF khớp với những gì đang xem trên màn hình. */
+      #table-container-desktop table th.col-hidden,
+      #table-container-desktop table td.col-hidden { display: none !important; }
     }
     .print-only { display: none; }
     @media print { .print-only { display: block !important; } }
+
+    /* ===== TÍNH NĂNG ẨN / HIỆN CỘT (chỉ áp dụng cho bảng Desktop) ===== */
+    #members-table th.col-hidden,
+    #members-table td.col-hidden { display: none !important; }
+
+    #column-toggle-panel { min-width: 230px; max-height: 340px; overflow-y: auto; }
+    #column-toggle-panel label { user-select: none; }
 
     /* ===== HOẠT CẢNH LOADING: THUYỀN RỒNG BƠI TRÊN SÓNG ===== */
     .boat-loading-scene { position: relative; width: 220px; height: 92px; margin: 0 auto; }
@@ -284,6 +298,18 @@
         <button onclick="openAddModal()" class="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
           <i class="fa-solid fa-user-plus"></i> Thêm thành viên
         </button>
+        <div class="relative">
+          <button type="button" id="column-toggle-btn" onclick="toggleColumnPanel()" class="inline-flex items-center gap-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
+            <i class="fa-solid fa-table-columns"></i> Ẩn/Hiện cột
+          </button>
+          <div id="column-toggle-panel" class="hidden absolute right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-40 p-3">
+            <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+              <span class="text-xs font-bold uppercase text-gray-500">Chọn cột hiển thị</span>
+              <button type="button" onclick="resetColumnVisibility()" class="text-[11px] font-semibold text-red-700 hover:underline cursor-pointer">Hiện tất cả</button>
+            </div>
+            <div id="column-toggle-list" class="space-y-1.5 text-sm text-gray-700"></div>
+          </div>
+        </div>
         <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-5 py-3 rounded-xl shadow-sm transition-colors cursor-pointer">
           <i class="fa-solid fa-file-excel"></i> Xuất Excel
         </button>
@@ -374,21 +400,22 @@
         <table class="w-full text-left border-collapse table-fixed" id="members-table">
           <thead>
             <tr class="bg-gradient-to-r from-red-700 to-red-800 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-              <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">STT</th>
-              <th class="py-3 px-1.5 w-[13%] text-left border-r border-red-600/30">Họ và tên</th>
-              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
-              <th class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
-              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">Cao / Nặng</th>
-              <th class="py-3 px-1.5 w-[5%] text-center border-r border-red-600/30">Size áo</th>
-              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
-              <th class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
-              <th class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
-              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">TDP</th>
-              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Địa chỉ</th>
-              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Kinh nghiệm</th>
-              <th class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Công việc</th>
-              <th class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Cam kết</th>
-              <th class="py-3 px-1.5 w-[5%] text-center no-print">Sửa</th>
+              <th data-col="stt" class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">STT</th>
+              <th data-col="hoTen" class="py-3 px-1.5 w-[13%] text-left border-r border-red-600/30">Họ và tên</th>
+              <th data-col="ngaySinh" class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">DOB</th>
+              <th data-col="gioiTinh" class="py-3 px-1.5 w-[4%] text-center border-r border-red-600/30">GT</th>
+              <th data-col="caoNang" class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">Cao / Nặng</th>
+              <th data-col="sizeAo" class="py-3 px-1.5 w-[5%] text-center border-r border-red-600/30">Size áo</th>
+              <th data-col="tayThuan" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Tay thuận</th>
+              <th data-col="cccd" class="py-3 px-1.5 w-[8%] text-center border-r border-red-600/30">CCCD</th>
+              <th data-col="sdt" class="py-3 px-1.5 w-[7%] text-center border-r border-red-600/30">SĐT</th>
+              <th data-col="tdp" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">TDP</th>
+              <th data-col="diaChi" class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Địa chỉ</th>
+              <th data-col="kinhNghiem" class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Kinh nghiệm</th>
+              <th data-col="congViec" class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Công việc</th>
+              <th data-col="camKet" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Cam kết</th>
+              <th data-col="nhomZalo" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Nhóm Zalo</th>
+              <th data-col="actions" class="py-3 px-1.5 w-[5%] text-center no-print">Sửa</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-xs font-medium text-gray-700">
@@ -530,6 +557,11 @@
           <div class="md:col-span-2">
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Công việc</label>
             <input id="m-congViec" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nhóm Zalo</label>
+            <input id="m-nhomZalo" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="vd: Nhóm Zalo 1">
           </div>
 
           <div class="md:col-span-2 flex items-center gap-2 pt-1">
@@ -734,6 +766,8 @@
       const printDateEl = document.getElementById('print-date');
       if (printDateEl) printDateEl.innerText = 'Ngày xuất: ' + new Date().toLocaleString('vi-VN');
 
+      initColumnVisibility();
+
       let hasCache = false;
       try {
         const cached = localStorage.getItem(CACHE_KEY);
@@ -756,6 +790,124 @@
         }
       });
     });
+
+    // ============================================================
+    // ===============  ẨN / HIỆN CỘT (bảng Desktop)  ==============
+    // ============================================================
+    // Danh sách các cột có thể ẩn/hiện (không gồm cột "Sửa" vì đó là nút thao tác,
+    // luôn cần giữ lại để còn bấm sửa thành viên).
+    const TOGGLE_COLUMNS = [
+      { key: 'stt', label: 'STT' },
+      { key: 'hoTen', label: 'Họ và tên' },
+      { key: 'ngaySinh', label: 'Ngày sinh (DOB)' },
+      { key: 'gioiTinh', label: 'Giới tính (GT)' },
+      { key: 'caoNang', label: 'Cao / Nặng' },
+      { key: 'sizeAo', label: 'Size áo' },
+      { key: 'tayThuan', label: 'Tay thuận' },
+      { key: 'cccd', label: 'CCCD' },
+      { key: 'sdt', label: 'SĐT' },
+      { key: 'tdp', label: 'Tổ dân phố (TDP)' },
+      { key: 'diaChi', label: 'Địa chỉ' },
+      { key: 'kinhNghiem', label: 'Kinh nghiệm' },
+      { key: 'congViec', label: 'Công việc' },
+      { key: 'camKet', label: 'Cam kết' },
+      { key: 'nhomZalo', label: 'Nhóm Zalo' }
+    ];
+    const COLUMN_VISIBILITY_KEY = 'clb_column_visibility_v1';
+    let hiddenColumns = new Set();
+
+    // Tỉ trọng độ rộng gốc của từng cột (đúng theo % đã khai báo sẵn ở thẻ <th> w-[X%]),
+    // dùng để TÍNH LẠI % độ rộng của các cột đang HIỂN THỊ mỗi khi ẩn/hiện cột,
+    // để các cột còn lại luôn giãn ra lấp đầy vừa khít 100% chiều rộng bảng,
+    // không còn để lại khoảng trống xấu như trước (do table-layout:fixed giữ nguyên
+    // % gốc của từng cột kể cả khi cột khác đã bị ẩn).
+    // Cột "actions" (nút Sửa) không nằm trong danh sách ẩn/hiện nên luôn được tính là hiển thị.
+    const COLUMN_WIDTHS = {
+      stt: 4, hoTen: 13, ngaySinh: 7, gioiTinh: 4, caoNang: 7, sizeAo: 5,
+      tayThuan: 6, cccd: 8, sdt: 7, tdp: 6, diaChi: 8, kinhNghiem: 8,
+      congViec: 8, camKet: 6, nhomZalo: 6, actions: 5
+    };
+
+    function recalcColumnWidths() {
+      const visibleKeys = Object.keys(COLUMN_WIDTHS).filter(key => key === 'actions' || !hiddenColumns.has(key));
+      const totalWeight = visibleKeys.reduce((sum, key) => sum + COLUMN_WIDTHS[key], 0);
+      if (totalWeight <= 0) return;
+      visibleKeys.forEach(key => {
+        const th = document.querySelector(`#members-table thead th[data-col="${key}"]`);
+        if (!th) return;
+        const pct = (COLUMN_WIDTHS[key] / totalWeight) * 100;
+        th.style.width = pct.toFixed(3) + '%';
+      });
+    }
+
+    function loadHiddenColumns() {
+      try {
+        const raw = localStorage.getItem(COLUMN_VISIBILITY_KEY);
+        if (raw) return new Set(JSON.parse(raw));
+      } catch (e) {}
+      return new Set();
+    }
+
+    function saveHiddenColumns() {
+      try { localStorage.setItem(COLUMN_VISIBILITY_KEY, JSON.stringify(Array.from(hiddenColumns))); } catch (e) {}
+    }
+
+    function applyColumnVisibility() {
+      TOGGLE_COLUMNS.forEach(col => {
+        const isHidden = hiddenColumns.has(col.key);
+        document.querySelectorAll(`#members-table [data-col="${col.key}"]`).forEach(el => {
+          el.classList.toggle('col-hidden', isHidden);
+        });
+      });
+      // Sau khi ẩn/hiện xong, tính lại % độ rộng cho các cột đang hiển thị
+      // để chúng tự giãn ra lấp đầy đúng 100% chiều rộng bảng (không còn khoảng trống hụt).
+      recalcColumnWidths();
+    }
+
+    function buildColumnTogglePanel() {
+      const list = document.getElementById('column-toggle-list');
+      list.innerHTML = TOGGLE_COLUMNS.map(col => `
+        <label class="flex items-center gap-2 py-1 px-1.5 rounded-lg hover:bg-gray-50 cursor-pointer">
+          <input type="checkbox" data-col-key="${col.key}" ${hiddenColumns.has(col.key) ? '' : 'checked'} onchange="onColumnCheckboxChange(this)" class="w-4 h-4 accent-red-700 cursor-pointer">
+          <span>${col.label}</span>
+        </label>
+      `).join('');
+    }
+
+    function onColumnCheckboxChange(checkbox) {
+      const key = checkbox.dataset.colKey;
+      if (checkbox.checked) hiddenColumns.delete(key);
+      else hiddenColumns.add(key);
+      saveHiddenColumns();
+      applyColumnVisibility();
+    }
+
+    function resetColumnVisibility() {
+      hiddenColumns = new Set();
+      saveHiddenColumns();
+      applyColumnVisibility();
+      buildColumnTogglePanel();
+    }
+
+    function toggleColumnPanel() {
+      const panel = document.getElementById('column-toggle-panel');
+      panel.classList.toggle('hidden');
+    }
+
+    function initColumnVisibility() {
+      hiddenColumns = loadHiddenColumns();
+      buildColumnTogglePanel();
+      applyColumnVisibility();
+
+      // Đóng panel khi bấm ra ngoài
+      document.addEventListener('click', (e) => {
+        const panel = document.getElementById('column-toggle-panel');
+        const btn = document.getElementById('column-toggle-btn');
+        if (panel.classList.contains('hidden')) return;
+        if (panel.contains(e.target) || btn.contains(e.target)) return;
+        panel.classList.add('hidden');
+      });
+    }
 
     // Hàm sắp xếp ưu tiên gom nhóm Tổ dân phố tăng dần, trong đó Leader phụ trách
     // tổ dân phố đó luôn được xếp đứng đầu danh sách của tổ mình.
@@ -872,7 +1024,7 @@
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
-            <td colspan="15" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
+            <td colspan="16" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
               ${groupHeaderHtml}
             </td>
           `;
@@ -888,20 +1040,21 @@
         const tr = document.createElement('tr');
         tr.className = `${assignedBgStyle} ${assignedBorderStyle} transition-colors`;
         tr.innerHTML = `
-          <td class="py-2 px-1.5 text-center align-top text-black font-normal border-r border-gray-100/50">${displayStt}</td>
-          <td class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${displayName(item)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.sizeAo || '---'}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
-          <td class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
-          <td class="py-2 px-1.5 text-center align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDPShort(item.toDanPho)}</td>
-          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.diaChi || '---'}</td>
-          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
-          <td class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
-          <td class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${item.camKet ? 'Cam kết' : '---'}</td>
+          <td data-col="stt" class="py-2 px-1.5 text-center align-top text-black font-normal border-r border-gray-100/50">${displayStt}</td>
+          <td data-col="hoTen" class="py-2 px-1.5 align-top font-semibold text-gray-900 border-r border-gray-100/50 whitespace-nowrap overflow-hidden text-ellipsis" title="${item.hoTen}">${displayName(item)}</td>
+          <td data-col="ngaySinh" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatNgaySinh(item.ngaySinh)}</td>
+          <td data-col="gioiTinh" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
+          <td data-col="caoNang" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatChieuCaoCanNangHTML(item.chieuCaoCanNang)}</td>
+          <td data-col="sizeAo" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${item.sizeAo || '---'}</td>
+          <td data-col="tayThuan" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${tayThuanBadge(item.tayThuan)}</td>
+          <td data-col="cccd" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50 leading-tight">${formatCCCD(item.cccd)}</td>
+          <td data-col="sdt" class="py-2 px-1.5 text-center align-top whitespace-nowrap border-r border-gray-100/50">${formatPhone(item.rawPhone)}</td>
+          <td data-col="tdp" class="py-2 px-1.5 text-center align-top text-gray-700 font-medium border-r border-gray-100/50 break-words">${formatTDPShort(item.toDanPho)}</td>
+          <td data-col="diaChi" class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.diaChi || '---'}</td>
+          <td data-col="kinhNghiem" class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
+          <td data-col="congViec" class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
+          <td data-col="camKet" class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${item.camKet ? 'Cam kết' : '---'}</td>
+          <td data-col="nhomZalo" class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${zaloStatusBadge(item.nhomZalo)}</td>
           <td class="py-2 px-1.5 text-center align-top no-print">
             <button type="button" onclick="openEditModal(${item.rowIndex})" class="text-red-700 hover:text-white hover:bg-red-700 border border-red-200 rounded-lg w-8 h-8 inline-flex items-center justify-center transition-colors cursor-pointer" title="Sửa thành viên">
               <i class="fa-solid fa-pen"></i>
@@ -934,10 +1087,13 @@
             <p class="col-span-2"><span class="text-gray-400">Kinh nghiệm:</span> ${item.kinhNghiem || '---'}</p>
             <p class="col-span-2"><span class="text-gray-400">Công việc:</span> ${item.congViec || '---'}</p>
             <p class="col-span-2"><span class="text-gray-400">Cam kết:</span> <strong class="text-gray-800">${item.camKet ? 'Cam kết' : '---'}</strong></p>
+            <p class="col-span-2 flex items-center gap-2"><span class="text-gray-400">Nhóm Zalo:</span> ${zaloStatusBadge(item.nhomZalo)}</p>
           </div>
         `;
         cardsContainer.appendChild(card);
       });
+
+      applyColumnVisibility();
     }
 
     // Danh sách 4 số cuối SĐT của các Leader CLB — dùng để tự động gắn icon Leader trước tên
@@ -1334,6 +1490,25 @@
       return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}">${label}</span>`;
     }
 
+    // Trả về HTML icon tròn thể hiện trạng thái "Nhóm Zalo":
+    // - Đã vào nhóm: viên tròn XANH LÁ, dấu tick trắng ở giữa
+    // - Chưa vào nhóm: viên tròn viền XÁM nhạt, dấu X xám ở giữa
+    // (đúng theo mẫu ảnh anh gửi, thay cho việc hiển thị chữ như trước)
+    function zaloStatusBadge(raw) {
+      const value = (raw || '').toString().trim();
+      const daVao = value !== '' && value !== '---';
+      if (daVao) {
+        return `
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 shadow-sm" title="${value}">
+            <i class="fa-solid fa-check text-white text-[11px]"></i>
+          </span>`;
+      }
+      return `
+        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-200" title="Chưa vào nhóm Zalo">
+          <i class="fa-solid fa-xmark text-gray-300 text-[11px]"></i>
+        </span>`;
+    }
+
     // Màu (mã hex, không dấu #) + nhãn có ký hiệu mũi tên dùng khi xuất Excel
     const TAY_THUAN_EXCEL_STYLE = {
       trai: { fill: 'DBEAFE', font: '1D4ED8', label: '◀ Trái' },
@@ -1427,6 +1602,7 @@
       document.getElementById('m-diaChi').value = item.diaChi || '';
       document.getElementById('m-kinhNghiem').value = item.kinhNghiem || '';
       document.getElementById('m-congViec').value = item.congViec || '';
+      document.getElementById('m-nhomZalo').value = item.nhomZalo || '';
       document.getElementById('m-camKet').checked = !!item.camKet;
 
       document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Sửa thông tin: ' + item.hoTen;
@@ -1477,6 +1653,7 @@
         rawPhone: document.getElementById('m-rawPhone').value.trim(),
         kinhNghiem: document.getElementById('m-kinhNghiem').value.trim(),
         congViec: document.getElementById('m-congViec').value.trim(),
+        nhomZalo: document.getElementById('m-nhomZalo').value.trim(),
         camKet: document.getElementById('m-camKet').checked ? 'Cam kết' : '',
         cccd: cccd,
         diaChi: document.getElementById('m-diaChi').value.trim(),
@@ -1637,10 +1814,10 @@
 
     const EXCEL_HEADERS = [
       'STT', 'Họ và tên', 'Ngày sinh', 'Giới tính', 'Cao / Nặng', 'Size áo', 'Tay thuận',
-      'Số CCCD', 'Ngày cấp', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết'
+      'Số CCCD', 'Ngày cấp', 'Số điện thoại', 'Tổ dân phố', 'Địa chỉ', 'Kinh nghiệm', 'Công việc', 'Cam kết', 'Nhóm Zalo'
     ];
-    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 15 cột -> cột cuối là "O"
-    const EXCEL_LAST_COL_LETTER = 'O';
+    const EXCEL_COL_COUNT = EXCEL_HEADERS.length; // 16 cột -> cột cuối là "P"
+    const EXCEL_LAST_COL_LETTER = 'P';
 
     function thinBorder(colorHex) {
       const side = { style: 'thin', color: { rgb: colorHex } };
@@ -1695,7 +1872,8 @@
           item.diaChi || '---',
           item.kinhNghiem || '---',
           item.congViec || '---',
-          item.camKet ? 'Cam kết' : '---'
+          item.camKet ? 'Cam kết' : '---',
+          item.nhomZalo || '---'
         ];
       });
 
@@ -1715,7 +1893,7 @@
       // ---- Độ rộng từng cột: nới rộng hơn hẳn so với bản trước, đặc biệt các cột
       // chứa thông tin dài (Họ và tên, Địa chỉ, Kinh nghiệm, Công việc, CCCD, TDP)
       // để chữ không bị dồn/lấp và dễ đọc hơn.
-      const COL_WCH = [8, 26, 13, 10, 13, 10, 11, 14, 12, 16, 20, 34, 28, 28, 12];
+      const COL_WCH = [8, 26, 13, 10, 13, 10, 11, 14, 12, 16, 20, 34, 28, 28, 12, 16];
       ws['!cols'] = COL_WCH.map(wch => ({ wch }));
 
       // ---- Chiều cao dòng: tính ĐỘNG theo độ dài nội dung từng dòng, đảm bảo đủ chỗ
@@ -1732,7 +1910,7 @@
         }, 0);
       }
 
-      const WRAP_COLS = [1, 10, 11, 12, 13]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc
+      const WRAP_COLS = [1, 10, 11, 12, 13, 15]; // Họ và tên, TDP, Địa chỉ, Kinh nghiệm, Công việc, Nhóm Zalo
       const LINE_HEIGHT_PT = 15;   // chiều cao 1 dòng chữ (pt), tương ứng cỡ chữ ~10.5
       const ROW_PADDING_PT = 8;    // đệm trên dưới cho thoáng, dễ nhìn
       const MIN_DATA_ROW_HPT = 26; // chiều cao tối thiểu mỗi dòng dữ liệu (rộng rãi hơn bản cũ)
@@ -1766,7 +1944,7 @@
       ws['!freeze'] = { xSplit: 0, ySplit: HEADER_ROW_INDEX + 1 };
       ws['!sheetViews'] = [{ state: 'frozen', xSplit: 0, ySplit: HEADER_ROW_INDEX + 1, topLeftCell: `A${HEADER_ROW_INDEX + 2}` }];
 
-      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 9, 14]); // STT, DOB, GT, Cao/Nặng, Size áo, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết
+      const CENTER_COLS = new Set([0, 2, 3, 4, 5, 6, 7, 8, 9, 14, 15]); // STT, DOB, GT, Cao/Nặng, Size áo, Tay thuận, Số CCCD, Ngày cấp, SĐT, Cam kết, Nhóm Zalo
 
       // ---- Style dòng tiêu đề CLB (dòng 1-2) ----
       ['A1', 'A2'].forEach((addr, i) => {
