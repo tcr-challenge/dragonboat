@@ -473,7 +473,8 @@
               <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-cake-candles"></i><br>DOB</th>
               <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-shirt"></i><br>Size áo</th>
               <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-venus-mars"></i><br>Giới tính</th>
-              <th class="py-4 px-6 text-center whitespace-nowrap"><i class="fa-solid fa-house-chimney"></i><br>Tổ dân phố</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap border-r border-red-600/30"><i class="fa-solid fa-house-chimney"></i><br>Tổ dân phố</th>
+              <th class="py-4 px-6 text-center whitespace-nowrap"><i class="fa-solid fa-comment-sms"></i><br>Nhóm Zalo bơi</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-sm font-medium text-gray-700">
@@ -702,6 +703,30 @@
       return str.toUpperCase();
     }
 
+    // Kiểm tra xem thành viên đã vào Nhóm Zalo bơi hay chưa.
+    // Nhận nhiều kiểu giá trị nhập trong Google Sheet (để không bắt buộc phải gõ đúng 1 chuẩn):
+    // true, "true", 1, "1", "x", "X", "✓", "có", "co", "rồi", "yes", "đã vào", "tham gia"...
+    // Đồng thời chấp nhận nhiều tên trường khác nhau mà API/proxy có thể trả về
+    // (nhomZalo, zaloBoi, zalo, daVaoZalo) để phòng trường hợp phía Apps Script đặt tên khác.
+    function isInZaloGroup(item) {
+      const raw = item.nhomZalo ?? item.zaloBoi ?? item.zalo ?? item.daVaoZalo;
+      if (raw === undefined || raw === null) return false;
+      if (typeof raw === 'boolean') return raw;
+      const str = raw.toString().trim().toLowerCase();
+      if (!str || str === '---') return false;
+      const truthyValues = ['x', '✓', '✔', 'true', '1', 'co', 'có', 'rồi', 'roi', 'yes', 'đã vào', 'da vao', 'tham gia'];
+      return truthyValues.some(v => str === v || str.includes(v));
+    }
+
+    // Trả về HTML hiển thị trạng thái Nhóm Zalo bơi: dấu tick xanh nếu đã vào, dấu gạch xám nếu chưa.
+    function zaloGroupBadge(item, size) {
+      size = size || 'text-base';
+      if (isInZaloGroup(item)) {
+        return `<i class="fa-solid fa-circle-check text-emerald-500 ${size}" title="Đã vào nhóm Zalo bơi"></i>`;
+      }
+      return `<i class="fa-regular fa-circle-xmark text-gray-300 ${size}" title="Chưa vào nhóm Zalo bơi"></i>`;
+    }
+
     function showMembers(list) {
       allMembers = list;
       document.getElementById('total-count').innerText = allMembers.length;
@@ -866,7 +891,7 @@
 
           const trGroup = document.createElement('tr');
           trGroup.innerHTML = `
-            <td colspan="6" class="py-2.5 px-6 bg-red-700 text-white font-bold tracking-wide">
+            <td colspan="7" class="py-2.5 px-6 bg-red-700 text-white font-bold tracking-wide">
               ${groupHeaderHtml}
             </td>
           `;
@@ -887,7 +912,8 @@
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.namSinh || '---'}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${formatSizeAo(item.sizeAo)}</td>
           <td class="py-4 px-6 text-center border-r border-gray-100/50">${item.gioiTinh || '---'}</td>
-          <td class="py-4 px-6 text-gray-700 font-medium">${item.toDanPho || '---'}</td>
+          <td class="py-4 px-6 text-gray-700 font-medium border-r border-gray-100/50">${item.toDanPho || '---'}</td>
+          <td class="py-4 px-6 text-center">${zaloGroupBadge(item, 'text-lg')}</td>
         `;
         tbodyFragment.appendChild(tr);
 
@@ -907,6 +933,7 @@
                   <span class="block">Năm sinh: <strong class="text-gray-700">${item.namSinh || '---'}</strong></span>
                   <span class="block">Giới tính: <strong class="text-gray-700">${item.gioiTinh || '---'}</strong></span>
                   <span class="block">Size áo: <strong class="text-gray-700">${formatSizeAo(item.sizeAo)}</strong></span>
+                  <span class="block">Nhóm Zalo bơi: ${zaloGroupBadge(item, 'text-xs')}</span>
                 </p>
               </div>
             </div>
@@ -925,6 +952,7 @@
                 <span class="block">Năm sinh: <strong>${item.namSinh || '---'}</strong></span>
                 <span class="block">Giới tính: <strong>${item.gioiTinh || '---'}</strong></span>
                 <span class="block">Size áo: <strong>${formatSizeAo(item.sizeAo)}</strong></span>
+                <span class="block">Nhóm Zalo bơi: ${zaloGroupBadge(item, 'text-sm')}</span>
               </p>
             </div>
             <span class="shrink-0 mt-0.5 text-xs font-semibold text-gray-700 bg-white/80 border border-black/5 px-2.5 py-1.5 rounded-md tracking-wide">${item.toDanPho || '---'}</span>
