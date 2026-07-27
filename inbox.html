@@ -46,6 +46,14 @@
       #cards-header, #cards-container { display: none !important; }
       main { max-width: 100% !important; padding: 0 !important; }
       table { font-size: 8.5px; width: 100%; table-layout: fixed; border-collapse: collapse; }
+      thead { display: table-header-group; } /* Lặp lại dòng tiêu đề cột ở đầu mỗi trang khi in */
+      /* Mỗi Tổ dân phố phải nằm ở 1 trang riêng: sang trang mới trước mỗi khối tiêu đề nhóm
+         (trừ khối đầu tiên, vì nó đã ở đầu trang 1 rồi) */
+      tr.print-page-break { page-break-before: always !important; break-before: page !important; }
+      /* Không cho thông tin của 1 thành viên (1 hàng) bị cắt ngang giữa 2 trang:
+         nếu hàng đó không đủ chỗ ở cuối trang, trình duyệt sẽ tự đẩy nguyên hàng đó
+         xuống đầu trang kế tiếp thay vì cắt đôi */
+      #table-container-desktop table tr { page-break-inside: avoid !important; break-inside: avoid !important; }
       th, td {
         padding: 3px 4px !important;
         line-height: 1.25 !important;
@@ -415,7 +423,7 @@
               <th data-col="congViec" class="py-3 px-1.5 w-[8%] text-left border-r border-red-600/30">Công việc</th>
               <th data-col="camKet" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Cam kết</th>
               <th data-col="nhomZalo" class="py-3 px-1.5 w-[6%] text-center border-r border-red-600/30">Nhóm Zalo</th>
-              <th data-col="actions" class="py-3 px-1.5 w-[5%] text-center no-print">Sửa</th>
+              <th class="py-3 px-1.5 w-[5%] text-center no-print">Sửa</th>
             </tr>
           </thead>
           <tbody id="table-body" class="divide-y divide-gray-100 text-xs font-medium text-gray-700">
@@ -561,12 +569,16 @@
 
           <div>
             <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nhóm Zalo</label>
-            <input id="m-nhomZalo" type="text" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="vd: Nhóm Zalo 1">
+            <select id="m-nhomZalo" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+              <option value="">-- Chọn --</option>
+              <option value="Đã vào nhóm">Đã vào nhóm</option>
+              <option value="Chưa vào nhóm">Chưa vào nhóm</option>
+            </select>
           </div>
 
           <div class="md:col-span-2 flex items-center gap-2 pt-1">
-            <input id="m-camKet" type="checkbox" class="w-4 h-4 accent-red-700">
-            <label for="m-camKet" class="text-sm font-medium text-gray-700">Đã cam kết tham gia</label>
+            <input id="m-camKet" type="checkbox" class="w-4 h-4 accent-red-700" onchange="updateSaveButtonState()">
+            <label for="m-camKet" class="text-sm font-medium text-gray-700">Đã cam kết tham gia <span class="text-red-600">*</span></label>
           </div>
         </div>
       </form>
@@ -816,30 +828,6 @@
     const COLUMN_VISIBILITY_KEY = 'clb_column_visibility_v1';
     let hiddenColumns = new Set();
 
-    // Tỉ trọng độ rộng gốc của từng cột (đúng theo % đã khai báo sẵn ở thẻ <th> w-[X%]),
-    // dùng để TÍNH LẠI % độ rộng của các cột đang HIỂN THỊ mỗi khi ẩn/hiện cột,
-    // để các cột còn lại luôn giãn ra lấp đầy vừa khít 100% chiều rộng bảng,
-    // không còn để lại khoảng trống xấu như trước (do table-layout:fixed giữ nguyên
-    // % gốc của từng cột kể cả khi cột khác đã bị ẩn).
-    // Cột "actions" (nút Sửa) không nằm trong danh sách ẩn/hiện nên luôn được tính là hiển thị.
-    const COLUMN_WIDTHS = {
-      stt: 4, hoTen: 13, ngaySinh: 7, gioiTinh: 4, caoNang: 7, sizeAo: 5,
-      tayThuan: 6, cccd: 8, sdt: 7, tdp: 6, diaChi: 8, kinhNghiem: 8,
-      congViec: 8, camKet: 6, nhomZalo: 6, actions: 5
-    };
-
-    function recalcColumnWidths() {
-      const visibleKeys = Object.keys(COLUMN_WIDTHS).filter(key => key === 'actions' || !hiddenColumns.has(key));
-      const totalWeight = visibleKeys.reduce((sum, key) => sum + COLUMN_WIDTHS[key], 0);
-      if (totalWeight <= 0) return;
-      visibleKeys.forEach(key => {
-        const th = document.querySelector(`#members-table thead th[data-col="${key}"]`);
-        if (!th) return;
-        const pct = (COLUMN_WIDTHS[key] / totalWeight) * 100;
-        th.style.width = pct.toFixed(3) + '%';
-      });
-    }
-
     function loadHiddenColumns() {
       try {
         const raw = localStorage.getItem(COLUMN_VISIBILITY_KEY);
@@ -859,9 +847,6 @@
           el.classList.toggle('col-hidden', isHidden);
         });
       });
-      // Sau khi ẩn/hiện xong, tính lại % độ rộng cho các cột đang hiển thị
-      // để chúng tự giãn ra lấp đầy đúng 100% chiều rộng bảng (không còn khoảng trống hụt).
-      recalcColumnWidths();
     }
 
     function buildColumnTogglePanel() {
@@ -987,6 +972,7 @@
 
       let lastTdpKeyForStt = null;
       let sttInGroup = 0;
+      let isFirstGroupRendered = true;
 
       list.forEach((item, index) => {
         const currentTdpKey = item.toDanPho || 'Trống';
@@ -1023,6 +1009,8 @@
           `;
 
           const trGroup = document.createElement('tr');
+          trGroup.className = isFirstGroupRendered ? '' : 'print-page-break';
+          isFirstGroupRendered = false;
           trGroup.innerHTML = `
             <td colspan="16" class="py-2.5 px-3 bg-red-700 text-white font-bold tracking-wide">
               ${groupHeaderHtml}
@@ -1054,7 +1042,7 @@
           <td data-col="kinhNghiem" class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.kinhNghiem || '---'}</td>
           <td data-col="congViec" class="py-2 px-1.5 text-left align-top text-gray-700 border-r border-gray-100/50 break-words">${item.congViec || '---'}</td>
           <td data-col="camKet" class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${item.camKet ? 'Cam kết' : '---'}</td>
-          <td data-col="nhomZalo" class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50">${zaloStatusBadge(item.nhomZalo)}</td>
+          <td data-col="nhomZalo" class="py-2 px-1.5 text-center align-top text-gray-700 border-r border-gray-100/50 break-words">${item.nhomZalo || '---'}</td>
           <td class="py-2 px-1.5 text-center align-top no-print">
             <button type="button" onclick="openEditModal(${item.rowIndex})" class="text-red-700 hover:text-white hover:bg-red-700 border border-red-200 rounded-lg w-8 h-8 inline-flex items-center justify-center transition-colors cursor-pointer" title="Sửa thành viên">
               <i class="fa-solid fa-pen"></i>
@@ -1087,7 +1075,7 @@
             <p class="col-span-2"><span class="text-gray-400">Kinh nghiệm:</span> ${item.kinhNghiem || '---'}</p>
             <p class="col-span-2"><span class="text-gray-400">Công việc:</span> ${item.congViec || '---'}</p>
             <p class="col-span-2"><span class="text-gray-400">Cam kết:</span> <strong class="text-gray-800">${item.camKet ? 'Cam kết' : '---'}</strong></p>
-            <p class="col-span-2 flex items-center gap-2"><span class="text-gray-400">Nhóm Zalo:</span> ${zaloStatusBadge(item.nhomZalo)}</p>
+            <p class="col-span-2"><span class="text-gray-400">Nhóm Zalo:</span> <strong class="text-gray-800">${item.nhomZalo || '---'}</strong></p>
           </div>
         `;
         cardsContainer.appendChild(card);
@@ -1490,25 +1478,6 @@
       return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cfg.badgeClass}">${label}</span>`;
     }
 
-    // Trả về HTML icon tròn thể hiện trạng thái "Nhóm Zalo":
-    // - Đã vào nhóm: viên tròn XANH LÁ, dấu tick trắng ở giữa
-    // - Chưa vào nhóm: viên tròn viền XÁM nhạt, dấu X xám ở giữa
-    // (đúng theo mẫu ảnh anh gửi, thay cho việc hiển thị chữ như trước)
-    function zaloStatusBadge(raw) {
-      const value = (raw || '').toString().trim();
-      const daVao = value !== '' && value !== '---';
-      if (daVao) {
-        return `
-          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500 shadow-sm" title="${value}">
-            <i class="fa-solid fa-check text-white text-[11px]"></i>
-          </span>`;
-      }
-      return `
-        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-200" title="Chưa vào nhóm Zalo">
-          <i class="fa-solid fa-xmark text-gray-300 text-[11px]"></i>
-        </span>`;
-    }
-
     // Màu (mã hex, không dấu #) + nhãn có ký hiệu mũi tên dùng khi xuất Excel
     const TAY_THUAN_EXCEL_STYLE = {
       trai: { fill: 'DBEAFE', font: '1D4ED8', label: '◀ Trái' },
@@ -1561,6 +1530,7 @@
       document.getElementById('member-save-btn-text').innerText = 'Lưu';
       document.getElementById('member-delete-btn').classList.add('hidden');
       document.getElementById('member-form-error').classList.add('hidden');
+      updateSaveButtonState();
       showMemberModal();
     }
 
@@ -1602,13 +1572,14 @@
       document.getElementById('m-diaChi').value = item.diaChi || '';
       document.getElementById('m-kinhNghiem').value = item.kinhNghiem || '';
       document.getElementById('m-congViec').value = item.congViec || '';
-      document.getElementById('m-nhomZalo').value = item.nhomZalo || '';
+      document.getElementById('m-nhomZalo').value = (item.nhomZalo === 'Đã vào nhóm' || item.nhomZalo === 'Chưa vào nhóm') ? item.nhomZalo : '';
       document.getElementById('m-camKet').checked = !!item.camKet;
 
       document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Sửa thông tin: ' + item.hoTen;
       document.getElementById('member-save-btn-text').innerText = 'Lưu thay đổi';
       document.getElementById('member-delete-btn').classList.remove('hidden');
       document.getElementById('member-form-error').classList.add('hidden');
+      updateSaveButtonState();
       showMemberModal();
     }
 
@@ -1663,6 +1634,14 @@
       };
     }
 
+    function updateSaveButtonState() {
+      const checked = document.getElementById('m-camKet').checked;
+      const btn = document.getElementById('member-save-btn');
+      btn.disabled = !checked;
+      btn.classList.toggle('opacity-50', !checked);
+      btn.classList.toggle('cursor-not-allowed', !checked);
+    }
+
     function setModalSaving(isSaving) {
       const btn = document.getElementById('member-save-btn');
       btn.disabled = isSaving;
@@ -1688,6 +1667,10 @@
       }
       if (member.rawPhone && !/^\d{9,11}$/.test(member.rawPhone)) {
         showModalError('Số điện thoại không hợp lệ (chỉ nhập số, 9-11 chữ số).');
+        return;
+      }
+      if (!document.getElementById('m-camKet').checked) {
+        showModalError('Vui lòng tick vào ô "Đã cam kết tham gia" trước khi lưu.');
         return;
       }
 
