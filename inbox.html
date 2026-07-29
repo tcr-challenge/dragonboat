@@ -1521,6 +1521,35 @@
       return allMembers.find(m => Number(m.rowIndex) === Number(rowIndex));
     }
 
+    // Gán giá trị cho một ô <select>: nếu dữ liệu đã lưu khớp với 1 trong các lựa chọn có sẵn
+    // thì tự động chọn đúng mục đó; nếu không khớp (trống hoặc không thuộc danh sách) thì để
+    // ở trạng thái "-- Chọn --".
+    function setSelectValueSafe(selectId, rawValue) {
+      const select = document.getElementById(selectId);
+      const matchesExisting = Array.from(select.options).some(o => o.value === rawValue);
+      select.value = matchesExisting ? rawValue : '';
+    }
+
+    // Chuẩn hoá giá trị "Nhóm Zalo" cũ về đúng 1 trong 2 lựa chọn chuẩn của menu.
+    // Dữ liệu cũ (khi còn là ô nhập tự do) có thể viết hoa/thường khác nhau, thừa khoảng trắng,
+    // hoặc dùng từ ngữ khác (vd: "Có", "TRUE", "x"...) nên cần nhận diện linh hoạt thay vì
+    // so khớp chính xác từng ký tự.
+    function normalizeNhomZaloValue(raw) {
+      if (raw === null || raw === undefined) return '';
+      const s = raw.toString().trim();
+      if (!s) return '';
+      const lower = s.toLowerCase();
+      if (lower.includes('chưa')) return 'Chưa vào nhóm';
+      if (lower.includes('đã') || lower.includes('da vao') || ['true', '1', 'x', 'có', 'co', 'yes'].includes(lower)) return 'Đã vào nhóm';
+      if (['false', '0', 'không', 'khong', 'no'].includes(lower)) return 'Chưa vào nhóm';
+      return s;
+    }
+
+    // Giữ tên hàm cũ để không phải sửa lại các chỗ đã gọi cho Nhóm Zalo
+    function setNhomZaloSelectValue(rawValue) {
+      setSelectValueSafe('m-nhomZalo', rawValue);
+    }
+
     function openAddModal() {
       document.getElementById('member-form').reset();
       document.getElementById('m-rowIndex').value = '';
@@ -1548,9 +1577,9 @@
       const ngaySinhISO = toISODateForInput(item.ngaySinh);
       document.getElementById('m-ngaySinh').value = isoToDisplayDate(ngaySinhISO);
       document.getElementById('m-ngaySinh').dataset.iso = ngaySinhISO;
-      document.getElementById('m-gioiTinh').value = item.gioiTinh || '';
+      setSelectValueSafe('m-gioiTinh', item.gioiTinh || '');
       document.getElementById('m-rawPhone').value = item.rawPhone || '';
-      document.getElementById('m-toDanPho').value = item.toDanPho || '';
+      setSelectValueSafe('m-toDanPho', item.toDanPho || '');
 
       const cccdParts = getCCCDParts(item.cccd);
       document.getElementById('m-cccdSo').value = cccdParts.number || '';
@@ -1562,7 +1591,7 @@
       document.getElementById('m-chieuCao').value = (hcParsed && hcParsed.heightPart && hcParsed.heightPart !== '---') ? hcParsed.heightPart : (hcParsed && !hcParsed.heightPart ? hcParsed.raw : '');
       document.getElementById('m-canNang').value = (hcParsed && hcParsed.weightPart && hcParsed.weightPart !== '---kg') ? hcParsed.weightPart : '';
 
-      document.getElementById('m-sizeAo').value = item.sizeAo || '';
+      setSelectValueSafe('m-sizeAo', item.sizeAo || '');
       const tayThuanType = classifyTayThuan(item.tayThuan);
       const tayThuanSelectValue = tayThuanType === 'trai' ? 'Trái'
         : tayThuanType === 'phai' ? 'Phải'
@@ -1570,9 +1599,9 @@
         : (item.tayThuan || '');
       document.getElementById('m-tayThuan').value = tayThuanSelectValue;
       document.getElementById('m-diaChi').value = item.diaChi || '';
-      document.getElementById('m-kinhNghiem').value = item.kinhNghiem || '';
+      setSelectValueSafe('m-kinhNghiem', item.kinhNghiem || '');
       document.getElementById('m-congViec').value = item.congViec || '';
-      document.getElementById('m-nhomZalo').value = (item.nhomZalo === 'Đã vào nhóm' || item.nhomZalo === 'Chưa vào nhóm') ? item.nhomZalo : '';
+      setNhomZaloSelectValue(normalizeNhomZaloValue(item.nhomZalo));
       document.getElementById('m-camKet').checked = !!item.camKet;
 
       document.getElementById('member-modal-title').innerHTML = '<i class="fa-solid fa-user-pen"></i> Sửa thông tin: ' + item.hoTen;
